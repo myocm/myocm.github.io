@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://mydba.xyz/2016/08/11/second/</loc>
+    
+    <lastmod>2016-08-19T06:11:57.355Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/2016/08/10/hello-world/</loc>
+    
+    <lastmod>2016-08-19T06:06:53.418Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/2016/08/18/percona-zabbix-templates/</loc>
+    
+    <lastmod>2016-08-18T10:30:22.683Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/404.html</loc>
+    
+    <lastmod>2016-08-15T02:03:51.967Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/about/index.html</loc>
+    
+    <lastmod>2016-08-15T02:03:49.229Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/search/index.html</loc>
+    
+    <lastmod>2016-08-15T02:03:48.152Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/categories/index.html</loc>
+    
+    <lastmod>2016-08-15T02:03:48.152Z</lastmod>
+    
+  </url>
+  
+</urlset>
