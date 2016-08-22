@@ -8,7 +8,7 @@ date: 2016-08-22 13:57:36
 updated: 2016-08-22 13:57:36
 tags:
 description:
-  使用 git 提交本项目
+  使用 git 提交本博客源码
 ---
 
 为了将本项目源码保存到GitHub，需要简单了解和使用git工具。
@@ -68,3 +68,6 @@ git push
 ```
 git pull
 ```
+---
+Good luck!
+冬日暖阳

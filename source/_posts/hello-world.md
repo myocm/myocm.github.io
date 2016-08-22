@@ -67,7 +67,7 @@ npm install hexo-generator-sitemap --save
 - 启动hexo，在本地查看效果
 ```
 hexo server
-```
+``` 
 在浏览器里输入 `http://localhost:4000  `
 如果能看到页面，则表示Hexo初始化成功。
 
