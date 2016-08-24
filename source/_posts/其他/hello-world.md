@@ -67,7 +67,7 @@ npm install hexo-generator-sitemap --save
 - 启动hexo，在本地查看效果
 ```
 hexo server
-``` 
+```
 在浏览器里输入 `http://localhost:4000  `
 如果能看到页面，则表示Hexo初始化成功。
 
@@ -159,3 +159,4 @@ jacman  https://github.com/wuchong/jacman/wiki/%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D
 ---
 Good luck!  
 冬日暖阳
+![](http://ocaw8wyva.bkt.clouddn.com/0d67fd84d40f37a3430eb33347f2a72b.png)

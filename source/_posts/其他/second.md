@@ -30,7 +30,7 @@ INFO  Created: F:\GitHub\myocm\source\_posts\second.md
 ```
 hexo g   # 产生可以发布的静态文件
 ```
-会在项目的public目录下生成网站的静态文件，拷贝所有文件到GitHub的本地文件夹，打开本机GitHub，登录并发布到GitHub服务器即可。 
+会在项目的public目录下生成网站的静态文件，拷贝所有文件到GitHub的本地文件夹，打开本机GitHub，登录并发布到GitHub服务器即可。
 
 ==========  
 推荐markdown编辑器
@@ -40,3 +40,4 @@ hexo g   # 产生可以发布的静态文件
 ----
 Good luck!  
 冬日暖阳
+![](http://ocaw8wyva.bkt.clouddn.com/fab34411cdca2bfa7558d8f8891c9860.png)
