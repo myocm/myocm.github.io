@@ -1,14 +1,14 @@
 ---
 title: {{ title }}
 date: {{ date }}
-updated:  {{ now('YYYY-MM-DD HH:mm:ss') }}
+updated:  {{ date }}
 list_number: false
 categories:
--
+- MySQL
 comments: true
 tags:
 description:
-
+- MySQL
 ---
 
 
