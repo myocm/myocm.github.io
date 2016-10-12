@@ -7,7 +7,7 @@ comments: true
 description:
   - MySQL 安装
 date: 2016-10-11 18:36:22
-updated: 2016-10-11 18:36:22
+updated: 2016-10-12 18:36:22
 tags:
 ---
 # 轻松安装MySQL
@@ -85,7 +85,6 @@ read_rnd_buffer_size = 2M
 sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 ```
 - 初始化数据字典参考
-
 ```
 # 启动一个cmd命令窗口，切换到参数文件my.ini指定的datadir目录
 # 输入下列命令
@@ -97,7 +96,6 @@ mysqld.exe --initialize 为安全初始化，会生成一个带随机密码的ro
 mysqld.exe --initialize-insecure 为非安全初始化，生成的root账号密码为空。
 ```
 - 创建windows服务参考
-
 ```
 # --install 后面可以指定服务名，默认为MySQL
 C:\>D:\Program\mysql-5.7.15-winx64\bin\mysqld.exe --install mysql
@@ -141,11 +139,15 @@ cmake .. -DWITH_BOOST=../boost \                       # 从5.7 版本起需要b
 -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \                    # 开启BLACKHOLE存储引擎
 -DWITH_PERFSCHEMA_STORAGE_ENGINE=1 \                   # 开启PERFSCHEMA存储引擎
 -DENABLED_LOCAL_INFILE=1 \                             # 开启支持本地操作文件权限
--DWITH_SYSTEMD=1                                       # 开启支持systemd 启动,在 redhat7等，systemd 系统上启用，其他系统可以不用这个参数。
-#
+-DWITH_EMBEDDED_SERVER=0 \                             # 关闭嵌入式服务器
+-DWITH_TEST_TRACE_PLUGIN=0 \                           # 关闭测试跟踪插件
+-DWITH_KEYRING_TEST=0 \                                # 关闭KEYRING测试
+-DINSTALL_MYSQLTESTDIR= \                              # 不安装测试文件
+-DWITH_SYSTEMD=0                                       # 是否支持systemd 启动,在 redhat7等，systemd 系统上启用，其他系统可以不用这个参数。
+
 # 编译  -j4 以4个job（即线程）编译
 make -j4
-#
+
 # 安装
 make install
 ```
@@ -160,8 +162,8 @@ make install
       mkdir bin data pid log mylogs
       cd bin
       cp /opt/freeware/mysql8.0.0/support-files/my-default.cnf my.cnf
-      #
-      #
+
+
       vim my.cnf
       # 参考上面my.ini配置
 ```
@@ -173,30 +175,104 @@ shell> mysqld --defaults-file=~/mysql8/bin/my.cnf --initialize --user=mysql
    5. 启动数据库服务器并修改root密码
 ```
       启动：
-      mysqld --defaults-file=~/mysql8/bin/my.cnf
-      #
+      shell> mysqld --defaults-file=~/mysql8/bin/my.cnf
+
       另起一个终端：
-      mysql -uroot -p  --socket=/tmp/mysql-3306.sock
-      #
+      shell> mysql -uroot -p  --socket=/tmp/mysql-3306.sock
+
       登录后
-      alter user 'root'@'localhost' identified by 'root';
-      flush privileges;
+      mysql> alter user 'root'@'localhost' identified by 'root';
+      mysql> flush privileges;
       退出后，可使用新密码登录。
 ```
    6. 创建启动脚本
 ```
-vim start.sh
+shell> vim start.sh
 #!/bin/bash
-#
+
 nohup mysqld_safe --defaults-file=./my.cnf &
-#
-chmod +x start.sh
+
+shell> chmod +x start.sh
 ```
   7. 创建停库脚本
 ```
-#!/bin/sh
+#!/bin/bash
 mysqladmin shutdown -uroot -p -S /tmp/mysql-3306.sock
 ```
+  8. 如果在编译时参数`-DWITH_SYSTEMD=1`，开启支持`systemd`方式启动的话，则不会生成`mysqld_safe`命令，上面的启动脚本就不能工作，需要执行下列步骤启用`systemd`方式启动。
+     1. 复制脚本到指定位置。在MySQL安装目录下，有`usr`目录，如下：
+     ```
+     shell> cd opt/freeware/mysql-8.0.0
+     shell> ls -l
+     drwxr-xr-x  2 root root  4096 2016-10-12 16:10:05 bin
+     -rw-r--r--  1 root root 17987 2016-08-25 20:32:09 COPYING
+     drwxr-xr-x  2 root root    55 2016-10-12 16:09:39 docs
+     drwxr-xr-x  3 root root  4096 2016-10-12 16:09:41 include
+     drwxr-xr-x  4 root root   172 2016-10-12 16:10:04 lib
+     drwxr-xr-x  4 root root    30 2016-10-12 16:09:58 man
+     -rw-r--r--  1 root root  2478 2016-08-25 20:32:09 README
+     drwxr-xr-x 28 root root  4096 2016-10-12 16:10:06 share
+     drwxr-xr-x  2 root root   112 2016-10-12 16:10:06 support-files
+     drwxr-xr-x  3 root root    17 2016-10-12 16:10:05 usr
+
+     # 复制usr目录里的文件到系统的/usr对应目录里
+     shell> cp -rp usr /usr
+     ```
+     2. 编辑MySQL的参数文件
+     ```
+     shell> vim /etc/my.cnf
+     [mysqld]
+
+      # Remove leading # and set to the amount of RAM for the most important data
+      # cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+      innodb_buffer_pool_size = 128M
+
+      # Remove leading # to turn on a very important data integrity option: logging
+      # changes to the binary log between backups.
+      # log_bin
+
+      # These are commonly set, remove the # and set as required.
+      basedir = /opt/freeware/mysql-8.0.0
+      datadir = /home/mysql/mysql8/data
+      port = 3306
+      server_id = 1
+      socket = /tmp/mysql-3306.sock
+
+
+      init_connect = 'SET NAMES utf8mb4'
+      init_connect = 'set autocommit = 0'  
+      transaction_isolation = READ-COMMITTED
+      lower_case_table_names = 1
+      skip-external-locking
+
+      # Remove leading # to set options mainly useful for reporting servers.
+      # The server defaults are faster for transactions and fast SELECTs.
+      # Adjust sizes as needed, experiment to find the optimal values.
+      # join_buffer_size = 128M
+      # sort_buffer_size = 2M
+      # read_rnd_buffer_size = 2M
+
+      sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+     ```
+     3. 启动MySQL服务
+     ```
+     # 查看mysqld服务状态
+     shell> systemctl status mysqld
+     # 启动
+     shell> systemctl start mysqld
+     # 停止
+     shell> systemctl stop mysqld
+     # 重启
+     shell> systemctl restart mysqld
+     ```
+     4. 设置开机启动MySQL服务
+     ```
+     # 设置开机启动
+     shell> systemctl enable mysqld
+     # 关闭开机启动
+     shell> systemctl disable mysqld
+     ```
+
 
 
 
