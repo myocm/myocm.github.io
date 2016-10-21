@@ -40,7 +40,7 @@ future: true
 highlight:
   enable: true
   line_number: true
-  auto_detect: false
+  auto_detect: true
   tab_replace:
 
 # Category & Tag
@@ -60,12 +60,26 @@ time_format: HH:mm:ss
 per_page: 10
 pagination_dir: page
 
+#index_generator:
+#  per_page: 5
+#
+#archive_generator:
+#  per_page: 20
+#  yearly: true
+#  monthly: true
+#
+#tag_generator:
+#  per_page: 10
+
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: jacman
 stylus:
   compress: true
+
+
+
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
