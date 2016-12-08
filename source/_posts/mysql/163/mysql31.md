@@ -72,7 +72,7 @@ Atlas： https://github.com/Qihoo360/Atlas/releases
 1. sudo dpkg -i Atlas-2.2-debian7.0-x86_64.deb
 2. 编辑配置文件
 3. /usr/local/mysql-proxy/bin/mysql-proxyd instancename start
-4.
+
 
 ### Amoeba for MySQL
 Amoeba是类似MySQL Proxy的中间件，采用java语言编写，具有读写分离、数据切分和过滤等功能，是非常早的一款国产MySQL读写分离软件
