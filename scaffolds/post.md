@@ -1,5 +1,5 @@
 ---
-title: {{ title }}
+title: MySQL优化 -- {{ title }}
 date: {{ date }}
 updated:  {{ date }}
 list_number: false
@@ -8,7 +8,7 @@ categories:
 comments: true
 tags:
 description:
-- MySQL
+- MySQL优化
 ---
 
 
