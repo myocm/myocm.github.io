@@ -1,0 +1,535 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>SQL进阶 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="SQL进阶">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL进阶">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql9.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="SQL进阶">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2016-10-20T05:24:44.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SQL进阶">
+<meta name="twitter:description" content="SQL进阶">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql9.html" title="SQL进阶" itemprop="url">SQL进阶</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-10-20T05:24:44.000Z" itemprop="datePublished"> 发表于 2016-10-20</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL进阶"><span class="toc-text">SQL进阶</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#order-by"><span class="toc-text">order by</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#distinct"><span class="toc-text">distinct</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#group-by"><span class="toc-text">group by</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#like"><span class="toc-text">like</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#limit-offset"><span class="toc-text">limit,offset</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#case-when"><span class="toc-text">case when</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="SQL进阶"><a href="#SQL进阶" class="headerlink" title="SQL进阶"></a>SQL进阶</h1><p>示例：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> play_list (</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">not</span> <span class="literal">null</span> <span class="keyword">comment</span> <span class="string">'主键'</span>,</span><br><span class="line">play_name <span class="built_in">varchar</span>(<span class="number">255</span>) <span class="keyword">default</span> <span class="literal">null</span> <span class="keyword">comment</span> <span class="string">'歌单名字'</span>,</span><br><span class="line">userid <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">not</span> <span class="literal">null</span> <span class="keyword">comment</span> <span class="string">'歌单作者账号id'</span>,</span><br><span class="line">createtime <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">default</span> <span class="string">'0'</span> <span class="keyword">comment</span> <span class="string">'歌单创建时间'</span>,</span><br><span class="line">updatetime <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">default</span> <span class="string">'0'</span> <span class="keyword">comment</span> <span class="string">'歌单更新时间'</span>,</span><br><span class="line">bookedcount <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">default</span> <span class="string">'0'</span> <span class="keyword">comment</span> <span class="string">'歌曲的订阅人数'</span>,</span><br><span class="line">trackcount <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">default</span> <span class="string">'0'</span> <span class="keyword">comment</span> <span class="string">'歌曲的数量'</span>,</span><br><span class="line"><span class="keyword">status</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">default</span> <span class="string">'0'</span> <span class="keyword">comment</span> <span class="string">'状态，是否删除'</span>,</span><br><span class="line">primary <span class="keyword">key</span> (<span class="keyword">id</span>),</span><br><span class="line"><span class="keyword">key</span> idx_createtime(createtime),</span><br><span class="line"><span class="keyword">key</span> idx_uid_ctime(userid,createtime)</span><br><span class="line">) <span class="keyword">engine</span>=<span class="keyword">innodb</span> <span class="keyword">default</span> <span class="keyword">charset</span>=utf8 <span class="keyword">comment</span>=<span class="string">'歌单'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">1</span>,<span class="string">'老男孩'</span>,<span class="number">1</span>,<span class="number">143023383</span>,<span class="number">143023383</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">0</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">2</span>,<span class="string">'情歌王子'</span>,<span class="number">2</span>,<span class="number">143023384</span>,<span class="number">143023384</span>,<span class="number">7</span>,<span class="number">3</span>,<span class="number">0</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">3</span>,<span class="string">'每日歌曲推荐'</span>,<span class="number">3</span>,<span class="number">143023385</span>,<span class="number">143023385</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">0</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">4</span>,<span class="string">'山河水'</span>,<span class="number">4</span>,<span class="number">143023386</span>,<span class="number">143023386</span>,<span class="number">5</span>,<span class="literal">null</span>,<span class="number">0</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">5</span>,<span class="string">'李荣浩'</span>,<span class="number">1</span>,<span class="number">143023387</span>,<span class="number">143023387</span>,<span class="number">1</span>,<span class="number">10</span>,<span class="number">0</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> play_list <span class="keyword">values</span>(<span class="number">6</span>,<span class="string">'情深深'</span>,<span class="number">5</span>,<span class="number">143023388</span>,<span class="number">143023388</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>);</span><br></pre></td></tr></table></figure></p>
+<h2 id="order-by"><a href="#order-by" class="headerlink" title="order by"></a>order by</h2><ul>
+<li>order by 语句用于根据指定的列对结果集进行排序</li>
+<li>order by 语句默认按照升序对记录进行排序，等价于 order by xxx asc； 可以使用desc 降序。</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">order</span> <span class="keyword">by</span> createtime;</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name          | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  1 | 老男孩             |      1 |  143023383 |  143023383 |           5 |          6 |      0 |</span><br><span class="line">|  2 | 情歌王子           |      2 |  143023384 |  143023384 |           7 |          3 |      0 |</span><br><span class="line">|  3 | 每日歌曲推荐       |      3 |  143023385 |  143023385 |           2 |          3 |      0 |</span><br><span class="line">|  4 | 山河水             |      4 |  143023386 |  143023386 |           5 |       NULL |      0 |</span><br><span class="line">|  5 | 李荣浩             |      1 |  143023387 |  143023387 |           1 |         10 |      0 |</span><br><span class="line">|  6 | 情深深             |      5 |  143023388 |  143023388 |           0 |          0 |      1 |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">6 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">order</span> <span class="keyword">by</span> createtime <span class="keyword">desc</span>;</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name          | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  6 | 情深深             |      5 |  143023388 |  143023388 |           0 |          0 |      1 |</span><br><span class="line">|  5 | 李荣浩             |      1 |  143023387 |  143023387 |           1 |         10 |      0 |</span><br><span class="line">|  4 | 山河水             |      4 |  143023386 |  143023386 |           5 |       NULL |      0 |</span><br><span class="line">|  3 | 每日歌曲推荐       |      3 |  143023385 |  143023385 |           2 |          3 |      0 |</span><br><span class="line">|  2 | 情歌王子           |      2 |  143023384 |  143023384 |           7 |          3 |      0 |</span><br><span class="line">|  1 | 老男孩             |      1 |  143023383 |  143023383 |           5 |          6 |      0 |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">6 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="distinct"><a href="#distinct" class="headerlink" title="distinct"></a>distinct</h2><ul>
+<li>distinct 用于返回唯一不同的值</li>
+<li>可以返回多列的唯一组合</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> userid <span class="keyword">from</span> play_list;</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">| userid |</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">|      1 |</span><br><span class="line">|      2 |</span><br><span class="line">|      3 |</span><br><span class="line">|      4 |</span><br><span class="line">|      5 |</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">5 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> userid,play_name <span class="keyword">from</span> play_list;</span><br><span class="line">+<span class="comment">--------+--------------------+</span></span><br><span class="line">| userid | play_name          |</span><br><span class="line">+<span class="comment">--------+--------------------+</span></span><br><span class="line">|      1 | 老男孩             |</span><br><span class="line">|      2 | 情歌王子           |</span><br><span class="line">|      3 | 每日歌曲推荐       |</span><br><span class="line">|      4 | 山河水             |</span><br><span class="line">|      1 | 李荣浩             |</span><br><span class="line">|      5 | 情深深             |</span><br><span class="line">+<span class="comment">--------+--------------------+</span></span><br><span class="line">6 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="group-by"><a href="#group-by" class="headerlink" title="group by"></a>group by</h2><ul>
+<li>group by 根据单列或多列对数据进行分组，通常结合聚合函数使用，如<code>count(*)</code></li>
+<li>having 对分组进行过滤</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> userid,<span class="keyword">count</span>(*) <span class="keyword">from</span> play_list <span class="keyword">group</span> <span class="keyword">by</span> userid;</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">| userid | count(*) |</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">|      1 |        2 |</span><br><span class="line">|      2 |        1 |</span><br><span class="line">|      3 |        1 |</span><br><span class="line">|      4 |        1 |</span><br><span class="line">|      5 |        1 |</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">5 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- having过滤</span></span><br><span class="line"><span class="keyword">select</span> userid,<span class="keyword">count</span>(*) <span class="keyword">from</span> play_list <span class="keyword">group</span> <span class="keyword">by</span> userid <span class="keyword">having</span> <span class="keyword">count</span>(*) &gt;=<span class="number">2</span>;</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">| userid | count(*) |</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">|      1 |        2 |</span><br><span class="line">+<span class="comment">--------+----------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="like"><a href="#like" class="headerlink" title="like"></a>like</h2><p>模糊匹配</p>
+<table>
+<thead>
+<tr>
+<th>通配符</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%</code></td>
+<td>代表一个或多个字符</td>
+</tr>
+<tr>
+<td><code>_</code></td>
+<td>代表一个字符</td>
+</tr>
+<tr>
+<td><code>[charlist]</code></td>
+<td>匹配括号中的任何单一字符</td>
+</tr>
+<tr>
+<td><code>[^charlist]</code>或<code>[!charlist]</code></td>
+<td>匹配不在括号中的任何单一字符</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> play_name <span class="keyword">like</span> <span class="string">'%男孩%'</span>;</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  1 | 老男孩    |      1 |  143023383 |  143023383 |           5 |          6 |      0 |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.01</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="limit-offset"><a href="#limit-offset" class="headerlink" title="limit,offset"></a>limit,offset</h2><p>取指定条数，分页</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> createtime <span class="keyword">between</span> <span class="number">143023383</span> <span class="keyword">and</span> <span class="number">143023389</span> <span class="keyword">limit</span> <span class="number">2</span> <span class="keyword">offset</span> <span class="number">3</span>;</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  4 | 山河水    |      4 |  143023386 |  143023386 |           5 |       NULL |      0 |</span><br><span class="line">|  5 | 李荣浩    |      1 |  143023387 |  143023387 |           1 |         10 |      0 |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span> (<span class="number">0.01</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> createtime <span class="keyword">between</span> <span class="number">143023383</span> <span class="keyword">and</span> <span class="number">143023389</span> <span class="keyword">limit</span> <span class="number">3</span>,<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  4 | 山河水    |      4 |  143023386 |  143023386 |           5 |       NULL |      0 |</span><br><span class="line">|  5 | 李荣浩    |      1 |  143023387 |  143023387 |           1 |         10 |      0 |</span><br><span class="line">+<span class="comment">----+-----------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> createtime <span class="keyword">between</span> <span class="number">143023383</span> <span class="keyword">and</span> <span class="number">143023389</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name          | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  2 | 情歌王子           |      2 |  143023384 |  143023384 |           7 |          3 |      0 |</span><br><span class="line">|  3 | 每日歌曲推荐       |      3 |  143023385 |  143023385 |           2 |          3 |      0 |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> createtime <span class="keyword">between</span> <span class="number">143023383</span> <span class="keyword">and</span> <span class="number">143023389</span> <span class="keyword">limit</span> <span class="number">1</span> <span class="keyword">offset</span> <span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name          | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  3 | 每日歌曲推荐       |      3 |  143023385 |  143023385 |           2 |          3 |      0 |</span><br><span class="line">+<span class="comment">----+--------------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> play_list <span class="keyword">where</span> createtime <span class="keyword">between</span> <span class="number">143023383</span> <span class="keyword">and</span> <span class="number">143023389</span> <span class="keyword">limit</span> <span class="number">0</span>,<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+--------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">| id | play_name    | userid | createtime | updatetime | bookedcount | trackcount | status |</span><br><span class="line">+<span class="comment">----+--------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">|  1 | 老男孩       |      1 |  143023383 |  143023383 |           5 |          6 |      0 |</span><br><span class="line">|  2 | 情歌王子     |      2 |  143023384 |  143023384 |           7 |          3 |      0 |</span><br><span class="line">+<span class="comment">----+--------------+--------+------------+------------+-------------+------------+--------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h2 id="case-when"><a href="#case-when" class="headerlink" title="case when"></a>case when</h2><p>case when 实现类似编程语言的if else 功能， 可以对SQL 的输出结果进行选择判断。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> play_name,</span><br><span class="line">(<span class="keyword">case</span> <span class="keyword">when</span> trackcount <span class="keyword">is</span> <span class="literal">null</span> <span class="keyword">then</span> <span class="number">0</span> <span class="keyword">else</span> trackcount  <span class="keyword">end</span> ) <span class="keyword">as</span> trackcount</span><br><span class="line"><span class="keyword">from</span> play_list;</span><br><span class="line">+<span class="comment">--------------------+------------+</span></span><br><span class="line">| play_name          | trackcount |</span><br><span class="line">+<span class="comment">--------------------+------------+</span></span><br><span class="line">| 老男孩             |          6 |</span><br><span class="line">| 情歌王子           |          3 |</span><br><span class="line">| 每日歌曲推荐       |          3 |</span><br><span class="line">| 山河水             |          0 |</span><br><span class="line">| 李荣浩             |         10 |</span><br><span class="line">| 情深深             |          0 |</span><br><span class="line">+<span class="comment">--------------------+------------+</span></span><br><span class="line">6 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql9.html" data-title="SQL进阶 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql10.html" title="MySQL常用函数及运算符">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL常用函数及运算符</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql8.html" title="MySQL权限管理">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL权限管理
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql9.html" data-title="SQL进阶" data-url="http://mydba.xyz/mysql/163/mysql9.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL进阶"><span class="toc-text">SQL进阶</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#order-by"><span class="toc-text">order by</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#distinct"><span class="toc-text">distinct</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#group-by"><span class="toc-text">group by</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#like"><span class="toc-text">like</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#limit-offset"><span class="toc-text">limit,offset</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#case-when"><span class="toc-text">case when</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

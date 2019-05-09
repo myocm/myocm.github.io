@@ -1,0 +1,676 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 2 数据库查询优化技术总揽 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 2 数据库查询优化技术总揽">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op2.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161227170038583.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161228160214105.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161228162809846.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161228171242880.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161228171327962.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161228172258813.png">
+<meta property="og:updated_time" content="2016-12-27T08:13:53.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 2 数据库查询优化技术总揽">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20161227170038583.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op2.html" title="MySQL优化 -- 2 数据库查询优化技术总揽" itemprop="url">MySQL优化 -- 2 数据库查询优化技术总揽</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-12-27T08:13:53.000Z" itemprop="datePublished"> 发表于 2016-12-27</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#数据库查询优化技术总揽"><span class="toc-text">数据库查询优化技术总揽</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Query-Optimization-Technology"><span class="toc-text">What is the Query Optimization Technology</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Reuse"><span class="toc-text">Query Reuse</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Rewrite-Rule"><span class="toc-text">Query Rewrite Rule</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Optimization-Algorithm"><span class="toc-text">Query Optimization Algorithm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Parallel-Query-Optimization"><span class="toc-text">Parallel Query Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Distributed-Query-Optimization"><span class="toc-text">Distributed Query Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Logical-Query-Optimization"><span class="toc-text">What  is the Logical Query Optimization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Physical-Query-Optimization"><span class="toc-text">What is the Physical Query Optimization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Query-Execution-Plan-of-MySQL"><span class="toc-text">Query Execution Plan of MySQL</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="数据库查询优化技术总揽"><a href="#数据库查询优化技术总揽" class="headerlink" title="数据库查询优化技术总揽"></a>数据库查询优化技术总揽</h1><p>Database Query Optimization Technology Overview</p>
+<h2 id="What-is-the-Query-Optimization-Technology"><a href="#What-is-the-Query-Optimization-Technology" class="headerlink" title="What is the Query Optimization Technology"></a>What is the Query Optimization Technology</h2><h3 id="Query-Reuse"><a href="#Query-Reuse" class="headerlink" title="Query Reuse"></a>Query Reuse</h3><p><strong>查询重用</strong> 是指尽可能利用先前的执行结果，以达到节约查询计算全过程的时间并减少资源消耗的目的。</p>
+<p>目前查询重用技术主要集中在两个方面：</p>
+<ol>
+<li><strong>查询结果</strong> 的重用。在缓存区中分配一块缓冲块，存放该SQL 语句文本和最后的结果集，当同样的SQL输入时，直接把结果返回。查询结果的重用技术节约了查询计划生成时间，减少了查询执行全过程的资源消耗。</li>
+<li><strong>查询计划</strong> 的重用。缓存一条查询语句的执行计划及其相应语法树结构。查询计划的重用技术减少了查询计划生成的时间和资源消耗。</li>
+</ol>
+<p>查询重用技术利弊：</p>
+<ol>
+<li>弊端，结果集很大会消耗很大的内存资源，同样的SQL不同用户应该获取的结果集可能不同</li>
+<li>利端，节约了CPU和IO消耗。在实际使用的过程中，趋利避害，根据实际情况选用</li>
+</ol>
+<h3 id="Query-Rewrite-Rule"><a href="#Query-Rewrite-Rule" class="headerlink" title="Query Rewrite Rule"></a>Query Rewrite Rule</h3><p><strong>查询重写</strong>：<br>是查询语句的一种<strong>等价转换</strong>，即对于任何相关模式的任意状态都会产生相同的结果（相同的关系替代两个表达式中相应的关系，所得到的结果是相同的）。</p>
+<p>查询重写的两个目标：</p>
+<ol>
+<li>将查询转换为等价的效率更高的形式，例如将效率低的谓词转换为效率高的谓词、消除重复条件等。</li>
+<li>尽量将查询重写为等价、简单且不受表顺序限制的形式，为物理查询优化阶段提供更多的选择，如视图的重写、子查询的合并转换等。</li>
+</ol>
+<p>查询重写的依据是关系代数：  </p>
+<ol>
+<li>关系代数的等价变换规则对查询重写提供了理论上的支持。</li>
+<li>查询重写后，查询优化器可能生成多个连接路径，可以从候选者中择优。</li>
+</ol>
+<p>查询优化技术类型：  </p>
+<p>1 语法级。查询语言层的优化，基于语法进行优化。<br>2 代数级。查询使用形式逻辑进行优化，运用关系代数的原理进行优化。<br>3 语义级。根据完整性约束，对查询语句进行语义理解，推知一些可优化的操作。<br>4 物理级。物理优化技术，基于代价估算模型，比较得出各种执行方式中代价最小的。  </p>
+<blockquote>
+<p>查询重写是基于语法级、代数级、语义级的优化，可以统一归属到逻辑优化的范畴;<br>基于代价估算模型是物理层面的优化，是从连接路径中选择代价最小的路径的过程。</p>
+</blockquote>
+<p>查询优化重写思路：</p>
+<ol>
+<li>将过程性查询转换为描述性的查询，如视图重写。</li>
+<li>将复杂的查询（如嵌套子查询、外连接消除、嵌套连接消除）尽可能转换为多表连接查询。</li>
+<li>将效率低的谓词转换为等价的效率高的谓词（如等价谓词重写）。</li>
+</ol>
+<p>利用等式和不等式的性质，简化WHERE、HAVING和ON条件。<br>如何改进现有查询重写规则的效率，如何发现更多更有效的重写规则，是查询优化的研究内容之一。<br>常见的查询重写技术类型，每一类都有自己的规则，这些规则没有确定的、统一的规律，但重写的核心一定是<strong>“等价转换”，只有等价才能转换，这是需要特别强调的</strong>。</p>
+<h3 id="Query-Optimization-Algorithm"><a href="#Query-Optimization-Algorithm" class="headerlink" title="Query Optimization Algorithm"></a>Query Optimization Algorithm</h3><ul>
+<li>什么是查询优化算法</li>
+</ul>
+<p>查询优化，求解给定查询语句的高效执行计划的过程。<br>这样的过程，包括了多种子问题求解。不同的子问题，对应了不同的解决方法，即算法。</p>
+<ul>
+<li>什么是查询计划</li>
+</ul>
+<p>查询计划，也称为查询树，它由一系列内部的操作符组成，这些操作符按一定的运算关系构成查询的一个执行方案。</p>
+<p>举例来说，就是表A和表B先连接得到中间结果，然后再和另外的表C连接得到新的中间方式，直至所有表都被连接完毕（连接操作就是操作符，这个示例有两个连接操作符。A连接B连接C、C连接B连接A就是两种不同的执行方案，即是两个不同的执行计划，查询优化要选出最高效的一个执行方案）。</p>
+<p>查询计划的长像：<br><img src="/img/markdown-img-paste-20161227170038583.png" alt=""></p>
+<p>查询计划，从形式上看，是一颗二叉树，树叶是每个单表对象；<br>两个树叶的父结点是一个连接操作符（如左外连接操作符，A left-out join B）连接后的中间结果（另外还有一些其他结点如排序操作等也可以作为中间结果）这个结果是一个临时“关系”，这样直至根结点。</p>
+<ul>
+<li><p>查询计划，二叉树上的不同结点：</p>
+<ul>
+<li><p>单表结点<br>考虑单表的数据获取方式，是直接通过IO获得数据，还是通过索引获取数据，或者是通过索引定位数据的位置后再经过IO到数据块中获取数据。<br>这是一个从物理存储到内存解析成逻辑字段的过程，即符合冯·诺依曼体系结构的要求（外存数据读入内存才能被处理）。</p>
+</li>
+<li><p>两表结点<br>考虑两表以何种方式连接、代价有多大、连接路径有哪些等。表示的是内存中的元组，怎么进行元组间的连接。此时，元组通常已经存在于内存，直接使用即可。这是一个完成用户语义的逻辑操作，但是只是局部操作，只涉及两个具体的关系。完成用户全部语义（用户连接的语义），需要配合多表的连接顺序的操作。<br>不同的连接算法导致的连接效率不同，如数据少时可使用Hash连接，数据量大可使用嵌套连接，数据如果有序可使用归并连接或先排序后使用归并连接等。</p>
+</li>
+<li><p>多表结点<br>考虑多表连接顺序如何构成代价最少的“执行计划”。决定是AB先连接还是BC先连接，这是一个比较花费大小的运算。如果太多的连接方式被判断，也会导致效率问题。<br>多个关系采用不同次序进行连接，花费的CPU资源、内存资源差异可能较大。<br>许多数据库采用左深树、右深树、紧密树三种方式或其中一部分对多表进行连接得到多种连接路径。</p>
+</li>
+</ul>
+</li>
+<li><p>生成最优查询计划的策略</p>
+<ol>
+<li><p>基于规则优化<br>根据经验或一些已经探知或被证明有效的方式，定义为“规则”（如根据关系代数得知的规则、根据经验得知的规则等），用这些规则化简查询计划生成过程中符合可被化简的操作，使用启发式规则排除一些明显不好的存取路径，这就是基于规则的优化。</p>
+</li>
+<li><p>基于代价优化<br>根据一个代价评估模型，在生成查询计划的过程中，计算每条存取路径（存取路径主要包括上述三个“关系结点”）的花费，然后选择代价最小的作为子路径，这样直至所有表连接完毕得到一个完整的路径。<br>主流数据库都采用了基于代价策略进行优化的技术。<br><strong>主流数据库对于基于规则和基于代价的技术，都在使用！</strong></p>
+</li>
+</ol>
+<blockquote>
+<p>基于规则优化具有操作简单且能快速确定连接方式的优点，但这种方法只是排除了一部分不好的可能，所以得到的结果未必是最好的；</p>
+</blockquote>
+<blockquote>
+<p>基于代价优化，是对各种可能的情况进行量化比较，从而可以得到花费最小的情况，但如果组合情况比较多则花费的判断时间就会很多；</p>
+</blockquote>
+<blockquote>
+<p>查询优化器的实现，多是两种优化策略组合使用，如MySQL和PostgreSQL就采取了基于规则和代价估算的查询优化策略。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="Parallel-Query-Optimization"><a href="#Parallel-Query-Optimization" class="headerlink" title="Parallel Query Optimization"></a>Parallel Query Optimization</h3><ul>
+<li><p>查询优化为什么要并行<br>传统单机数据库系统中，给定一个查询（Query），查询优化算法只需找到查询的一个具有最小执行花费的执行计划，这样的计划必定具有最快的响应时间。<br>在并行数据库系统中，查询优化的目标是寻找具有最小响应时间的查询执行计划，这需要把查询工作分解为一些可以并行运行的子工作。一些商业数据库提供了并行查询的功能，用以优化查询执行操作。</p>
+</li>
+<li><p>查询优化并行的条件：<br>一个查询能否并行执行，取决于多种因素：</p>
+<ol>
+<li>系统中的可用资源（如内存、高速缓存中的数据量等）。</li>
+<li>CPU的数目。</li>
+<li>运算中的特定代数运算符。<blockquote>
+<p>如A、B、C、D四个表进行连接，每个表的单表扫描可以并行进行；在生成四个表连接的查询计划过程中，可选择A和B连接的同时C和D进行连接，这样连接操作能并行运行。不同商业数据库，对查询并行的实现也不尽相同。</p>
+</blockquote>
+</li>
+</ol>
+<p>在同一个SQL内，查询并行可以分为：</p>
+<ol>
+<li>操作内并行。将同一操作如单表扫描操作、两表连接操作、排序操作等分解成多个独立的子操作，由不同的CPU同时执行。</li>
+<li>操作间并行。一条SQL查询语句可以分解成多个子操作，由多个CPU执行。</li>
+</ol>
+</li>
+</ul>
+<h3 id="Distributed-Query-Optimization"><a href="#Distributed-Query-Optimization" class="headerlink" title="Distributed Query Optimization"></a>Distributed Query Optimization</h3><p>在分布式数据库系统中, 查询策略优化是查询优化的重点。</p>
+<p>主要是数据传输策略，A、B两结点的数据进行连接，是A结点数据传输到B结点或是从B到A或是先各自进行过滤然后再传输等）和局部处理优化（传统的单结点数据库的查询优化技术）</p>
+<p>在查询优化策略中，数据的通信开销是优化算法考虑的主要因素。分布式查询优化以减少传输的次数和数据量作为查询优化的目标。</p>
+<p>分布式数据库系统中的代价估算模型，除了考虑CPU代价和I/O代价外，还要考虑通过网络在结点间传输数据的代价。这是分布式并行查询优化技术与传统单结点数据库系统最大不同之处。</p>
+<p>在分布式数据库系统中，代价估算模型为：</p>
+<p><strong>总代价 = I/O代价 + CPU代价 + 通信代价</strong></p>
+<h2 id="What-is-the-Logical-Query-Optimization"><a href="#What-is-the-Logical-Query-Optimization" class="headerlink" title="What  is the Logical Query Optimization"></a>What  is the Logical Query Optimization</h2><p>关系理论 + 查询重写 + 启发式规则 = 逻辑查询优化</p>
+<ul>
+<li><p>查询的基本操作</p>
+<ol>
+<li><p>选择操作。<br>对应的是限制条件（格式类似“field <op> consant”，field表示列对象，op是操作符如“=”、“&gt;”等）。<br>优化方式是选择操作下推，目的是尽量减少连接操作前的元组数，使得中间临时关系尽量少（元组数少，连接得到的元组数就少），这样可能减少IO和CPU的消耗、节约内存空间。</op></p>
+</li>
+<li><p>投影操作。<br>对应的SELECT查询的目的列对象。<br>优化方式是投影操作下推。<br>目的是尽量减少连接操作前的列数，使得中间临时关系尽量小（特别注意差别：选择操作是使元组的个数“尽量少”，投影操作是使一条元组“尽量小”），这样虽然不能减少IO（多数数据库存储方式是行存储，元组是读取的最基本单位，所以要想操作列则必须读取一行数据），但可以各减少连接后的中间关系的元组大小，节约内存空间。</p>
+</li>
+<li><p>连接操作。<br>对应的是连接条件（格式类似“field_1 <op> field_2”，field_1和field_2表示不同表上的列对象，op是操作符如“=”、“&gt;”等），表示两个表连接的条件。  </op></p>
+<p>连接操作涉及两个子问题：</p>
+<ol>
+<li><p>多表连接中每个表被连接的顺序决定着效率。<br>如果一个查询语句只有一个表，则这样的语句很简单；但如果有多个表，则会涉及表之间以什么样的顺序连接最高效（如A、B、C三表连接，如果ABC、ACB、BCA等连接后的结果集一样，则哪种连接次序的效率最高，是需要考虑的问题）。</p>
+</li>
+<li><p>多表连接每个表被连接的顺序被用户语义决定。<br>查询语句多表连接有着不同的语义（如是笛卡儿集、内连接、还是外连接中的左外连接等），这决定着表之间的前后连接次序是不能随意更换的，否则，结果集中数据是不同的。因此，表的前后连接次序是不能随意交换的。</p>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li><p>查询的2种类型<br>根据SQL语句的形式特点，还可以做如下区分：</p>
+<ol>
+<li><p>针对SPJ的查询优化。<br>基于选择、投影、连接三种基本操作相结合的查询。</p>
+</li>
+<li><p>针对非SPJ的查询优化。<br>在SPJ的基础上存在GROUPBY操作的查询，这是一种较为复杂的查询。</p>
+</li>
+</ol>
+<blockquote>
+<p>所以，针对SPJ和非SPJ的查询优化，其实是对以上多种操作的优化。<br>“选择”和“投影”操作，可以在关系代数规则的指导下进行优化。<br>表连接，需要多表连接的相关算法完成优化。其他操作的优化多是基于索引和代价估算完成的。</p>
+</blockquote>
+</li>
+</ul>
+<ul>
+<li>逻辑查询优化包括的技术<ol>
+<li>子查询优化</li>
+<li>视图重写</li>
+<li>等价谓词重写</li>
+<li>条件化简</li>
+<li>外连接消除</li>
+<li>嵌套连接消除</li>
+<li>连接消除</li>
+<li>语义优化</li>
+<li>非SPJ的优化</li>
+</ol>
+</li>
+</ul>
+<h2 id="What-is-the-Physical-Query-Optimization"><a href="#What-is-the-Physical-Query-Optimization" class="headerlink" title="What is the Physical Query Optimization"></a>What is the Physical Query Optimization</h2><p>代价模型 + 索引/索引的利用 + 单表扫描算法 + 两表连接算法 + 多表连接算法 = 物理查询优化</p>
+<h2 id="Query-Execution-Plan-of-MySQL"><a href="#Query-Execution-Plan-of-MySQL" class="headerlink" title="Query Execution Plan of MySQL"></a>Query Execution Plan of MySQL</h2><p><a href="http://dev.mysql.com/doc/refman/5.6/en/explain-output.html" target="_blank" rel="noopener">官方文档explain-output.html</a></p>
+<ul>
+<li><p>语法格式</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;EXPLAIN | DESCRIBE | DESC &#125; [explain_type] explainable_stmt</span><br></pre></td></tr></table></figure>
+<p>可选项包括：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">EXTENDED | PARTITIONS | FORMAT = format_name</span><br><span class="line">format_name:</span><br><span class="line">    TRADITIONAL | JSON</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>说明  </p>
+<ol>
+<li>EXPLAIN命令，显示SQL语句的查询执行计划。</li>
+<li>EXPLAIN EXTENDED命令，显示SQL语句的详细的查询执行计划；之后可以通过“SHOW WARNINGS”命令查看详细的信息。</li>
+<li>EXPLAIN PARTITIONS命令，显示SQL语句的带有分区表信息的查询执行计划。</li>
+<li>EXPLAIN命令的输出格式有两种。<ol>
+<li>TRADITIONAL；传统类型；按行隔离，每行标识一个子操作。</li>
+<li>JSON；JSON格式。</li>
+</ol>
+</li>
+<li>explainable_stmt，可被EXPLAIN执行的SQL语句，包括的类型有：<br>SELECT、INSERT、UPDATE、DELETE、REPLACE 。</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li>执行顺序  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">EXPLAIN</span></span><br><span class="line"><span class="keyword">SELECT</span> *</span><br><span class="line"><span class="keyword">FROM</span> (t1 <span class="keyword">LEFT</span> <span class="keyword">JOIN</span> t2 <span class="keyword">ON</span> <span class="literal">true</span>), (t3 <span class="keyword">FULL</span> <span class="keyword">JOIN</span> t4 <span class="keyword">ON</span> <span class="literal">true</span>), t5</span><br><span class="line"> <span class="keyword">WHERE</span> id1=id2 <span class="keyword">AND</span></span><br><span class="line">       id2=id3 <span class="keyword">AND</span></span><br><span class="line">       id3=id4 <span class="keyword">AND</span></span><br><span class="line">       id4=id5;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><img src="/img/markdown-img-paste-20161228160214105.png" alt=""><br>1) 从第1行到第9行，表示了完整的查询执行计划。<br>2) 第1行到第3行，表明查询计划的结构；id表示对象被操作的顺序；id值大，先被执行；如果相同，执行顺序从上到下。<br>3) 从第4行起，每一行为一个节点，表示本节点被操作对象的可用信息，如索引等。<br>4) 表的连接次序为：t4 t5 t3 t1 t2。这和初始给定的连接次序不同，经过优化，外连接被消除；<br>5)  t4表的元组数最少，按照MySQL多表连接算法，表经过排序后，顺序为 t4 t5 t2 t3 t1。<br>6)  因为t5、t3、t1上有索引可以利用，所以t4上的一条元组确定后，则可以利用索引之间定位t5、t3、t1表上的元组，所以第5、6、7行的key列有索引可用；ref列表明这三个表都是引用了t4表的id4列。<br>7)  t2表的数据相对较多，且又没有索引，最后被连接，连接使用了Extra列表明的块嵌套循环连接算法，并且使用了连接缓存。  </p>
+<p>  嵌套循环算法<br>  MySQL   块嵌套循环算法<br>  <img src="/img/markdown-img-paste-20161228162809846.png" alt=""></p>
+<ul>
+<li><p>结点解析<br>1) id：每个被独立执行的操作的标识，表示对象被操作的顺序；id值大，先被执行；如果相同，执行顺序从上到下。<br>2) select_type：查询中每个select子句的类型；具体值参见表C-2。<br>3) table：名字，被操作的对象名称，通常是表名，但有其他格式。<br>4) partitions：匹配的分区信息（对于非分区表值为NULL）。<br>5) type：连接操作的类型；具体值参见表C-3。<br>6) possible_keys：备选的索引（列出可能被使用到的索引）。<br>7) key：经优化器选定的索引；常用“ANALYZE TABLE”命令可以使优化器正确地选择索引。<br>8) key_len：被优化器选定的索引键的长度，单位是字节。<br>9) ref：表示本行被操作的对象的参照对象（被参照的对象可能是一个常量用“const”表示，也可能是其他表的key指向的对象）。<br>10) rows：查询执行所扫描的元组个数（对于InnoDB，此值是个估计值）。<br>11) filtered：按照条件表上数据被过滤的元组个数的百分比，“rows×filtered/100”可以求出过滤后的元组数即实际的元组数。<br>12) extra: MySQL 查询优化器执行查询的过程中对查询计划的重要补充信息，具体如表C-4所示。</p>
+<p><img src="/img/markdown-img-paste-20161228171242880.png" alt="C-2"></p>
+<p><img src="/img/markdown-img-paste-20161228171327962.png" alt="C-3"></p>
+<p><img src="/img/markdown-img-paste-20161228172258813.png" alt="C-4"></p>
+</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op2.html" data-title="MySQL优化 -- 2 数据库查询优化技术总揽 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op3.html" title="MySQL优化 -- 3 子查询的优化（一）">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 3 子查询的优化（一）</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/optimization/op1.html" title="MySQL优化 -- 1 数据库与关系代数">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 1 数据库与关系代数
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op2.html" data-title="MySQL优化 -- 2 数据库查询优化技术总揽" data-url="http://mydba.xyz/mysql/optimization/op2.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#数据库查询优化技术总揽"><span class="toc-text">数据库查询优化技术总揽</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Query-Optimization-Technology"><span class="toc-text">What is the Query Optimization Technology</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Reuse"><span class="toc-text">Query Reuse</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Rewrite-Rule"><span class="toc-text">Query Rewrite Rule</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-Optimization-Algorithm"><span class="toc-text">Query Optimization Algorithm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Parallel-Query-Optimization"><span class="toc-text">Parallel Query Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Distributed-Query-Optimization"><span class="toc-text">Distributed Query Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Logical-Query-Optimization"><span class="toc-text">What  is the Logical Query Optimization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Physical-Query-Optimization"><span class="toc-text">What is the Physical Query Optimization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Query-Execution-Plan-of-MySQL"><span class="toc-text">Query Execution Plan of MySQL</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

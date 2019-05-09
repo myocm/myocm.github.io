@@ -1,0 +1,638 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>SQL语言简介 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="SQL语言简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL语言简介">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql4.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="SQL语言简介">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2016-10-13T07:58:43.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SQL语言简介">
+<meta name="twitter:description" content="SQL语言简介">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql4.html" title="SQL语言简介" itemprop="url">SQL语言简介</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-10-13T07:58:43.000Z" itemprop="datePublished"> 发表于 2016-10-13</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL语言简介"><span class="toc-text">SQL语言简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL是什么"><span class="toc-text">SQL是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语言与数据库"><span class="toc-text">SQL语言与数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语句的分类"><span class="toc-text">SQL语句的分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语言在MySQL上的基本操作"><span class="toc-text">SQL语言在MySQL上的基本操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-连接和断开MySQL"><span class="toc-text">1. 连接和断开MySQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-输入查询"><span class="toc-text">2. 输入查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-创建和使用数据库"><span class="toc-text">3. 创建和使用数据库</span></a></li></ol></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="SQL语言简介"><a href="#SQL语言简介" class="headerlink" title="SQL语言简介"></a>SQL语言简介</h1><h2 id="SQL是什么"><a href="#SQL是什么" class="headerlink" title="SQL是什么"></a>SQL是什么</h2><ul>
+<li>Structured Query Language 的首字母缩写</li>
+<li>用于关系数据库中的数据存取操作</li>
+<li>与数据库沟通的钥匙</li>
+</ul>
+<h2 id="SQL语言与数据库"><a href="#SQL语言与数据库" class="headerlink" title="SQL语言与数据库"></a>SQL语言与数据库</h2><ul>
+<li>用SQL创建表，定义表的字段</li>
+<li>用SQL向表添加，删除，修改记录</li>
+<li>用SQL从表中查询出想要的记录</li>
+<li>用SQL操作数据库的一切……</li>
+</ul>
+<h2 id="SQL语句的分类"><a href="#SQL语句的分类" class="headerlink" title="SQL语句的分类"></a>SQL语句的分类</h2><table>
+<thead>
+<tr>
+<th>SQL语句的分类</th>
+<th>大致用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDL（Data Definition Language）</td>
+<td>创建数据库，创建表，修改表，删除表等</td>
+</tr>
+<tr>
+<td>DML（Data Manipulation Language）</td>
+<td>向表中增加，修改，删除记录，取出记录</td>
+</tr>
+<tr>
+<td>DCL（Data Control Language ）</td>
+<td>控制数据库的访问权限等设置</td>
+</tr>
+<tr>
+<td>TCL（Transaction Control Language ）</td>
+<td>控制事务进展</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>DDL语句<br>CREATE TABLE<br>ALTER TABLE<br>DROP TABLE</li>
+</ul>
+<ul>
+<li>DML语句<br>SELECT FROM TABLE<br>INSERT INTO TABLE<br>UPDATE TABLE SET<br>DELETE FROM TABLE</li>
+</ul>
+<ul>
+<li>DCL语句<br>GRANT<br>REVOKE</li>
+</ul>
+<ul>
+<li>TCL语句<br>COMMIT<br>ROLLBACK</li>
+</ul>
+<p>示例：<br>DDL:<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> friend(</span><br><span class="line"><span class="keyword">id</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">unsigned</span> <span class="keyword">not</span> <span class="literal">null</span> auto_increment,</span><br><span class="line"><span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">50</span>),</span><br><span class="line">age <span class="built_in">int</span>(<span class="number">11</span>),</span><br><span class="line">gender <span class="built_in">varchar</span>(<span class="number">5</span>),</span><br><span class="line">PRIMARY <span class="keyword">KEY</span>(<span class="keyword">id</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>DML:<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> friend(<span class="keyword">name</span>,age,gender) <span class="keyword">VALUES</span>(<span class="string">'Tom'</span>,<span class="number">16</span>,<span class="string">'male'</span>);</span><br><span class="line"><span class="keyword">UPDATE</span> friend <span class="keyword">SET</span> age=<span class="number">19</span> <span class="keyword">WHERE</span> <span class="keyword">name</span>=<span class="string">'Tom'</span>;</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> friend;</span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> friend <span class="keyword">WHERE</span> <span class="keyword">name</span>=<span class="string">'Tom'</span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="SQL语言在MySQL上的基本操作"><a href="#SQL语言在MySQL上的基本操作" class="headerlink" title="SQL语言在MySQL上的基本操作"></a>SQL语言在MySQL上的基本操作</h2><h3 id="1-连接和断开MySQL"><a href="#1-连接和断开MySQL" class="headerlink" title="1. 连接和断开MySQL"></a>1. 连接和断开MySQL</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; mysql -h host -u user -p</span><br><span class="line"></span><br><span class="line">Enter password: ********</span><br><span class="line"></span><br><span class="line">QUIT 或 \q</span><br><span class="line">Bye</span><br></pre></td></tr></table></figure>
+<h3 id="2-输入查询"><a href="#2-输入查询" class="headerlink" title="2. 输入查询"></a>2. 输入查询</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">USER</span>(),<span class="keyword">CURRENT_DATE</span>(),<span class="keyword">CURRENT_TIME</span>(),<span class="keyword">CURRENT_TIMESTAMP</span>() ;</span><br><span class="line">+<span class="comment">----------------+----------------+----------------+---------------------+</span></span><br><span class="line">| USER()         | CURRENT_DATE() | CURRENT_TIME() | CURRENT_TIMESTAMP() |</span><br><span class="line">+<span class="comment">----------------+----------------+----------------+---------------------+</span></span><br><span class="line">| root@localhost | 2015-07-13     | 11:12:37       | 2015-07-13 11:12:37 |</span><br><span class="line">+<span class="comment">----------------+----------------+----------------+---------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>可以当作计算器</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">SIN</span>(<span class="keyword">PI</span>()/<span class="number">4</span>), (<span class="number">4</span>+<span class="number">1</span>)*<span class="number">5</span>;</span><br><span class="line">+<span class="comment">--------------------+---------+</span></span><br><span class="line">| SIN(PI()/4)        | (4+1)*5 |</span><br><span class="line">+<span class="comment">--------------------+---------+</span></span><br><span class="line">| 0.7071067811865475 |      25 |</span><br><span class="line">+<span class="comment">--------------------+---------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.08</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>多个查询同时执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">VERSION</span>(); <span class="keyword">SELECT</span> <span class="keyword">NOW</span>();</span><br><span class="line">+<span class="comment">-----------+</span></span><br><span class="line">| VERSION() |</span><br><span class="line">+<span class="comment">-----------+</span></span><br><span class="line">| 5.6.25    |</span><br><span class="line">+<span class="comment">-----------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">+<span class="comment">---------------------+</span></span><br><span class="line">| <span class="keyword">NOW</span>()               |</span><br><span class="line">+<span class="comment">---------------------+</span></span><br><span class="line">| <span class="number">2015</span><span class="number">-07</span><span class="number">-13</span> <span class="number">11</span>:<span class="number">29</span>:<span class="number">54</span> |</span><br><span class="line">+<span class="comment">---------------------+</span></span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>取消本次查询</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">user</span>()</span><br><span class="line">   -&gt; \c</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>提示符含义</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Prompt</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td>Ready for new command.</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>-&gt;</td>
+<td>Waiting for next line of multiple-line command.</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>‘&gt;</td>
+<td>Waiting for next line, waiting for completion of a string that began with a single quote (“’”).</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>“&gt;</td>
+<td>Waiting for next line, waiting for completion of a string that began with a double quote (“””).</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>`&gt;</td>
+<td>Waiting for next line, waiting for completion of an identifier that began with a backtick (“`”).</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>/*&gt;</td>
+<td>Waiting for next line, waiting for completion of a comment that began with /*.</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-创建和使用数据库"><a href="#3-创建和使用数据库" class="headerlink" title="3. 创建和使用数据库"></a>3. 创建和使用数据库</h3><ul>
+<li><p>显示数据库</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">show</span> <span class="keyword">databases</span>;</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">| Database           |</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">| information_schema |</span><br><span class="line">| mysql              |</span><br><span class="line">| performance_schema |</span><br><span class="line">| sys                |</span><br><span class="line">| test               |</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">5 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建和选择一个数据库</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--选择一个数据库，设置为当前要使用的数据库</span></span><br><span class="line"> <span class="keyword">use</span> asiainfo</span><br><span class="line"><span class="keyword">Database</span> <span class="keyword">changed</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">--从shell直接登录到某个数据库</span></span><br><span class="line">shell&gt; mysql -u root -p <span class="keyword">test</span></span><br><span class="line"> <span class="keyword">select</span> <span class="keyword">database</span>();</span><br><span class="line">+<span class="comment">------------+</span></span><br><span class="line">| database() |</span><br><span class="line">+<span class="comment">------------+</span></span><br><span class="line">| test       |</span><br><span class="line">+<span class="comment">------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="comment">--此处的test 是你要直接登录的数据库名，而不是密码，如果要直接输入密码，需要直接跟在-p后面，不能有空格</span></span><br><span class="line">shell&gt; mysql -u root -p123456 <span class="keyword">test</span></span><br><span class="line"><span class="comment">--但是不推荐这种方式，这样会暴露密码。</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建表</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">show</span> <span class="keyword">tables</span>;</span><br><span class="line">Empty <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"> <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> pet (<span class="keyword">name</span> <span class="built_in">VARCHAR</span>(<span class="number">20</span>), owner <span class="built_in">VARCHAR</span>(<span class="number">20</span>),</span><br><span class="line">    -&gt; species <span class="built_in">VARCHAR</span>(<span class="number">20</span>), sex <span class="built_in">CHAR</span>(<span class="number">1</span>), birth <span class="built_in">DATE</span>, death <span class="built_in">DATE</span>);</span><br><span class="line">Query OK, 0 rows affected (0.03 sec)</span><br><span class="line"></span><br><span class="line"> <span class="keyword">show</span> <span class="keyword">tables</span>;</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">| Tables_in_asiainfo |</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">| pet                |</span><br><span class="line">+<span class="comment">--------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看表结构</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">describe</span> pet; 或 desc pet;</span><br><span class="line">+<span class="comment">---------+-------------+------+-----+---------+-------+</span></span><br><span class="line">| Field   | Type        | Null | Key | Default | Extra |</span><br><span class="line">+<span class="comment">---------+-------------+------+-----+---------+-------+</span></span><br><span class="line">| name    | varchar(20) | YES  |     | NULL    |       |</span><br><span class="line">| owner   | varchar(20) | YES  |     | NULL    |       |</span><br><span class="line">| species | varchar(20) | YES  |     | NULL    |       |</span><br><span class="line">| sex     | char(1)     | YES  |     | NULL    |       |</span><br><span class="line">| birth   | date        | YES  |     | NULL    |       |</span><br><span class="line">| death   | date        | YES  |     | NULL    |       |</span><br><span class="line">+<span class="comment">---------+-------------+------+-----+---------+-------+</span></span><br><span class="line">6 rows in <span class="keyword">set</span> (<span class="number">0.01</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>显示建表语句</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">show</span> <span class="keyword">create</span> <span class="keyword">table</span> pet\G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">       <span class="keyword">Table</span>: pet</span><br><span class="line"><span class="keyword">Create</span> <span class="keyword">Table</span>: <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`pet`</span> (</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`owner`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`species`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`sex`</span> <span class="built_in">char</span>(<span class="number">1</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`birth`</span> <span class="built_in">date</span> <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`death`</span> <span class="built_in">date</span> <span class="keyword">DEFAULT</span> <span class="literal">NULL</span></span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用insert 语句插入新的记录</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">insert</span> <span class="keyword">into</span> pet</span><br><span class="line">    -&gt; <span class="keyword">values</span> (<span class="string">'Puffball'</span>,<span class="string">'Diane'</span>,<span class="string">'hamster'</span>,<span class="string">'f'</span>,<span class="string">'1999-03-30'</span>,<span class="literal">null</span>);</span><br><span class="line">Query OK, 1 row affected (0.01 sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>从表中检索信息</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">select</span> * <span class="keyword">from</span> pet;</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">| name     | owner  | species | sex  | birth      | death      |</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">| Fluffy   | Harold | cat     | f    | 1993-02-04 | NULL       |</span><br><span class="line">| Claws    | Gwen   | cat     | m    | 1994-03-17 | NULL       |</span><br><span class="line">| Buffy    | Harold | dog     | f    | 1989-05-13 | NULL       |</span><br><span class="line">| Fang     | Benny  | dog     | m    | 1990-08-27 | NULL       |</span><br><span class="line">| Bowser   | Diane  | dog     | m    | 1979-08-31 | 1995-07-29 |</span><br><span class="line">| Chirpy   | Gwen   | bird    | f    | 1998-09-11 | NULL       |</span><br><span class="line">| Whistler | Gwen   | bird    | NULL | 1997-12-09 | NULL       |</span><br><span class="line">| Slim     | Benny  | snake   | m    | 1996-04-29 | NULL       |</span><br><span class="line">| Puffball | Diane  | hamster | f    | 1999-03-30 | NULL       |</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">9 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>更新记录</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">UPDATE</span> pet <span class="keyword">SET</span> birth = <span class="string">'1989-08-31'</span> <span class="keyword">WHERE</span> <span class="keyword">name</span> = <span class="string">'Bowser'</span>;</span><br><span class="line">Query OK, 1 row affected (0.01 sec)</span><br><span class="line">Rows matched: 1  Changed: 1  Warnings: 0</span><br><span class="line"></span><br><span class="line"> <span class="keyword">select</span> * <span class="keyword">from</span> pet;</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">| name     | owner  | species | sex  | birth      | death      |</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">| Fluffy   | Harold | cat     | f    | 1993-02-04 | NULL       |</span><br><span class="line">| Claws    | Gwen   | cat     | m    | 1994-03-17 | NULL       |</span><br><span class="line">| Buffy    | Harold | dog     | f    | 1989-05-13 | NULL       |</span><br><span class="line">| Fang     | Benny  | dog     | m    | 1990-08-27 | NULL       |</span><br><span class="line">| Bowser   | Diane  | dog     | m    | 1989-08-31 | 1995-07-29 |</span><br><span class="line">| Chirpy   | Gwen   | bird    | f    | 1998-09-11 | NULL       |</span><br><span class="line">| Whistler | Gwen   | bird    | NULL | 1997-12-09 | NULL       |</span><br><span class="line">| Slim     | Benny  | snake   | m    | 1996-04-29 | NULL       |</span><br><span class="line">| Puffball | Diane  | hamster | f    | 1999-03-30 | NULL       |</span><br><span class="line">+<span class="comment">----------+--------+---------+------+------------+------------+</span></span><br><span class="line">9 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查询部分行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> pet <span class="keyword">WHERE</span> <span class="keyword">name</span> = <span class="string">'Bowser'</span>;</span><br><span class="line">+<span class="comment">--------+-------+---------+------+------------+------------+</span></span><br><span class="line">| name   | owner | species | sex  | birth      | death      |</span><br><span class="line">+<span class="comment">--------+-------+---------+------+------------+------------+</span></span><br><span class="line">| Bowser | Diane | dog     | m    | 1989-08-31 | 1995-07-29 |</span><br><span class="line">+<span class="comment">--------+-------+---------+------+------------+------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查询部分列</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">name</span>, birth <span class="keyword">FROM</span> pet;</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">| name     | birth      |</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">| Fluffy   | 1993-02-04 |</span><br><span class="line">| Claws    | 1994-03-17 |</span><br><span class="line">| Buffy    | 1989-05-13 |</span><br><span class="line">| Fang     | 1990-08-27 |</span><br><span class="line">| Bowser   | 1989-08-31 |</span><br><span class="line">| Chirpy   | 1998-09-11 |</span><br><span class="line">| Whistler | 1997-12-09 |</span><br><span class="line">| Slim     | 1996-04-29 |</span><br><span class="line">| Puffball | 1999-03-30 |</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">9 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> owner <span class="keyword">FROM</span> pet;</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">| owner  |</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">| Harold |</span><br><span class="line">| Gwen   |</span><br><span class="line">| Benny  |</span><br><span class="line">| Diane  |</span><br><span class="line">+<span class="comment">--------+</span></span><br><span class="line">4 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用where条件来混合列选择和行选择</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">name</span>, species, birth <span class="keyword">FROM</span> pet</span><br><span class="line">    -&gt; <span class="keyword">WHERE</span> species = <span class="string">'dog'</span> <span class="keyword">OR</span> species = <span class="string">'cat'</span>;</span><br><span class="line">+<span class="comment">--------+---------+------------+</span></span><br><span class="line">| name   | species | birth      |</span><br><span class="line">+<span class="comment">--------+---------+------------+</span></span><br><span class="line">| Fluffy | cat     | 1993-02-04 |</span><br><span class="line">| Claws  | cat     | 1994-03-17 |</span><br><span class="line">| Buffy  | dog     | 1989-05-13 |</span><br><span class="line">| Fang   | dog     | 1990-08-27 |</span><br><span class="line">| Bowser | dog     | 1989-08-31 |</span><br><span class="line">+<span class="comment">--------+---------+------------+</span></span><br><span class="line">5 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>行排序</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">SELECT</span> <span class="keyword">name</span>, birth <span class="keyword">FROM</span> pet <span class="keyword">ORDER</span> <span class="keyword">BY</span> birth;</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">| name     | birth      |</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">| Buffy    | 1989-05-13 |</span><br><span class="line">| Bowser   | 1989-08-31 |</span><br><span class="line">| Fang     | 1990-08-27 |</span><br><span class="line">| Fluffy   | 1993-02-04 |</span><br><span class="line">| Claws    | 1994-03-17 |</span><br><span class="line">| Slim     | 1996-04-29 |</span><br><span class="line">| Whistler | 1997-12-09 |</span><br><span class="line">| Chirpy   | 1998-09-11 |</span><br><span class="line">| Puffball | 1999-03-30 |</span><br><span class="line">+<span class="comment">----------+------------+</span></span><br><span class="line">9 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql4.html" data-title="SQL语言简介 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql5.html" title="认识DBA">
+  <strong>上一篇：</strong><br>
+  <span>
+  认识DBA</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql3.html" title="连接MySQL">
+ <strong>下一篇：</strong><br> 
+ <span>连接MySQL
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql4.html" data-title="SQL语言简介" data-url="http://mydba.xyz/mysql/163/mysql4.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL语言简介"><span class="toc-text">SQL语言简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL是什么"><span class="toc-text">SQL是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语言与数据库"><span class="toc-text">SQL语言与数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语句的分类"><span class="toc-text">SQL语句的分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SQL语言在MySQL上的基本操作"><span class="toc-text">SQL语言在MySQL上的基本操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-连接和断开MySQL"><span class="toc-text">1. 连接和断开MySQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-输入查询"><span class="toc-text">2. 输入查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-创建和使用数据库"><span class="toc-text">3. 创建和使用数据库</span></a></li></ol></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

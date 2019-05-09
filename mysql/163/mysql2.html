@@ -1,0 +1,570 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL 安装 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL 安装">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL 安装">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql2.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL 安装">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2016-10-12T10:36:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL 安装">
+<meta name="twitter:description" content="MySQL 安装">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql2.html" title="MySQL 安装" itemprop="url">MySQL 安装</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-10-11T10:36:22.000Z" itemprop="datePublished"> 发表于 2016-10-11</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#轻松安装MySQL"><span class="toc-text">轻松安装MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#windows-下的安装"><span class="toc-text">windows 下的安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Linux-下的安装"><span class="toc-text">Linux 下的安装</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="轻松安装MySQL"><a href="#轻松安装MySQL" class="headerlink" title="轻松安装MySQL"></a>轻松安装MySQL</h1><p>官方参考文档<br><a href="http://dev.mysql.com/doc/refman/8.0/en/installing.html" target="_blank" rel="noopener">http://dev.mysql.com/doc/refman/8.0/en/installing.html</a></p>
+<h2 id="windows-下的安装"><a href="#windows-下的安装" class="headerlink" title="windows 下的安装"></a>windows 下的安装</h2><ol>
+<li><p>图形化工具安装  </p>
+<ol>
+<li>下载<a href="http://dev.mysql.com/downloads/installer/" target="_blank" rel="noopener">MySQL Installer</a></li>
+<li>选择合适的安装类型，根据安装向导完成安装即可。</li>
+</ol>
+</li>
+<li><p>绿色安装</p>
+<ol>
+<li>下载MySQL的<a href="http://dev.mysql.com/downloads/mysql/" target="_blank" rel="noopener">zip压缩包</a></li>
+<li>解压到本地磁盘</li>
+<li>创建参数文件my.ini，可以复制my-default.ini，并改名。</li>
+<li>编辑my.ini 文件。指定<code>basedir</code>,<code>datadir</code> 等参数。</li>
+<li>初始化数据字典。MySQL5.7.7 之前默认自带数据字典，MySQL5.7.7之后需要自己初始化数据字典。</li>
+<li>启动MySQL服务器。 在cmd窗口运行<code>D:\Program\mysql-5.7.15-winx64\bin&gt;mysqld.exe</code>即可。首次用初始化生成的随机密码进入后，要求立即修改root的密码，其他语句无法执行。输入<code>alter user &#39;root&#39;@&#39;localhost&#39; identified by &#39;passw0rd&#39;;</code></li>
+<li>关闭MySQL服务器。 在cmd窗口运行<code>D:\Program\mysql-5.7.15-winx64\bin&gt;mysqladmin.exe shutdown -uroot -p</code> 输入密码<code>passw0rd</code>即可。</li>
+<li>添加MySQL命令到PATH路径。就不需要使用命令的全路径了。</li>
+<li>创建MySQL的Windows服务。</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li><p>my.ini 配置参考</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">[client]</span><br><span class="line">port = 3306                          <span class="comment"># 设置服务器的端口为3306</span></span><br><span class="line">default-character-set = utf8         <span class="comment"># 设置客户端默认字符集为utf8</span></span><br><span class="line"></span><br><span class="line">[mysqld]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Remove leading # and set to the amount of RAM for the most important data</span></span><br><span class="line"><span class="comment"># cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.</span></span><br><span class="line">innodb_buffer_pool_size = 128M</span><br><span class="line"></span><br><span class="line"><span class="comment"># Remove leading # to turn on a very important data integrity option: logging</span></span><br><span class="line"><span class="comment"># changes to the binary log between backups.</span></span><br><span class="line"><span class="comment"># log_bin</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># These are commonly set, remove the # and set as required.</span></span><br><span class="line">basedir = D:\Program\mysql-5.7.15-winx64</span><br><span class="line">datadir = D:\Program\mysql-5.7.15-winx64\data</span><br><span class="line">port = 3306</span><br><span class="line">server_id = 1</span><br><span class="line"></span><br><span class="line">character_set_server = utf8              <span class="comment"># 设置服务器字符集为utf8</span></span><br><span class="line">collation_server = utf8_general_ci       <span class="comment"># 设置服务器字符集校对规则为utf8_general_ci</span></span><br><span class="line">init_connect = 'SET NAMES utf8'          <span class="comment"># 设置客户端连接时的字符集为utf8</span></span><br><span class="line">init_connect = 'set autocommit = 0'      <span class="comment"># 设置服务器关闭自动提交</span></span><br><span class="line">transaction_isolation = READ-COMMITTED   <span class="comment"># 设置服务器的事务隔离级别为 提交读</span></span><br><span class="line">lower_case_table_names = 1               <span class="comment"># 设置服务器表名为小写字母</span></span><br><span class="line">open_files_limit = 10240                 <span class="comment"># 设置服务器可以打开的文件数</span></span><br><span class="line">max_connections = 2000                   <span class="comment"># 设置服务器可以建立的最大连接数，默认为150</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">####innodb set</span></span><br><span class="line">innodb_buffer_pool_size = 256M           <span class="comment"># 设置innodb的内存大小为256M</span></span><br><span class="line">innodb_log_buffer_size = 20M             <span class="comment"># 设置innodb的日志缓冲区</span></span><br><span class="line">innodb_file_per_table=1                  <span class="comment"># 设置innodb单独表空间，不使用共享表空间</span></span><br><span class="line">innodb_open_files = 1000                 <span class="comment"># 设置innodb可以打开的文件数</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># slow_query_log                         # 设置服务器是否开启慢查询</span></span><br><span class="line"><span class="comment"># long_query_time = 5                    # 设置服务器慢查询的阈值，单位为秒，即大于这个时间的查询会被记录到慢查询日志。</span></span><br><span class="line"><span class="comment"># key_buffer_size = 50M                  # 设置服务器索引缓存空间</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Remove leading # to set options mainly useful for reporting servers.</span></span><br><span class="line"><span class="comment"># The server defaults are faster for transactions and fast SELECTs.</span></span><br><span class="line"><span class="comment"># Adjust sizes as needed, experiment to find the optimal values.</span></span><br><span class="line"><span class="comment"># join_buffer_size = 128M</span></span><br><span class="line">sort_buffer_size = 2M</span><br><span class="line">read_rnd_buffer_size = 2M</span><br><span class="line"></span><br><span class="line">sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初始化数据字典参考</p>
+<figure class="highlight taggerscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 启动一个cmd命令窗口，切换到参数文件my.ini指定的datadir目录</span><br><span class="line"># 输入下列命令</span><br><span class="line">D:<span class="symbol">\.</span>..<span class="symbol">\d</span>ata&gt;D:<span class="symbol">\P</span>rogram<span class="symbol">\m</span>ysql-5.7.15-winx64<span class="symbol">\b</span>in<span class="symbol">\m</span>ysqld.exe --initialize</span><br><span class="line">或</span><br><span class="line">D:<span class="symbol">\.</span>..<span class="symbol">\d</span>ata&gt;D:<span class="symbol">\P</span>rogram<span class="symbol">\m</span>ysql-5.7.15-winx64<span class="symbol">\b</span>in<span class="symbol">\m</span>ysqld.exe --initialize-insecure</span><br><span class="line"></span><br><span class="line">mysqld.exe --initialize 为安全初始化，会生成一个带随机密码的root账号。密码在数据目录的错误日志文件（主机名.err）中。</span><br><span class="line">mysqld.exe --initialize-insecure 为非安全初始化，生成的root账号密码为空。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建windows服务参考</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># --install 后面可以指定服务名，默认为MySQL</span></span><br><span class="line">C:\&gt;D:\Program\mysql-5.7.15-winx64\bin\mysqld.exe --install mysql</span><br><span class="line">Service successfully installed.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用windows服务启动 MySQL</span></span><br><span class="line">C:\&gt; net start mysql</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用windows服务停止 MySQL</span></span><br><span class="line">C:\&gt; net stop mysql</span><br><span class="line"></span><br><span class="line"><span class="comment"># 移除windows服务</span></span><br><span class="line">C:\&gt;D:\Program\mysql-5.7.15-winx64\bin\mysqld.exe --<span class="builtin-name">remove</span> mysql</span><br><span class="line">Service successfully removed.</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="Linux-下的安装"><a href="#Linux-下的安装" class="headerlink" title="Linux 下的安装"></a>Linux 下的安装</h2><ol>
+<li><p>从发行版仓库安装<br>各Linux发行版都提供从仓库安装MySQL。使用对应发行版从仓库安装软件的方式安装即可。<br>如果Linux发行版仓库里的版本比较老，可以去MySQL官方下载<a href="http://dev.mysql.com/downloads/repo/" target="_blank" rel="noopener">官方仓库源</a>。然后从MySQL官方仓库源安装即可。</p>
+</li>
+<li><p>源码安装<br>从5.7版本起与5.6及之前版本的源码编译安装有所不同，从源码安装时，要参考对应版本的安装说明。<br>下面的步骤适用于5.7及以后版本，以MySQL8.0.0开发版为例。  </p>
+<ol>
+<li>下载源码 <a href="http://dev.mysql.com/downloads/mysql/" target="_blank" rel="noopener">http://dev.mysql.com/downloads/mysql/</a></li>
+<li><p>解压并创建编译目录</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">tar</span> <span class="selector-tag">zxf</span> <span class="selector-tag">mysql-boost-8</span><span class="selector-class">.0</span><span class="selector-class">.0-dmr</span><span class="selector-class">.tar</span><span class="selector-class">.gz</span></span><br><span class="line"><span class="selector-tag">cd</span> <span class="selector-tag">mysql-boost-8</span><span class="selector-class">.0</span><span class="selector-class">.0-dmr</span></span><br><span class="line"><span class="selector-tag">mkdir</span> <span class="selector-tag">bld</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编译和安装程序</p>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">cd bld</span><br><span class="line">cmake .. -DWITH_BOOST=../boost \                       # 从5.7 版本起需要boost库，如果下载含有boost库的源码就可以不用下载，否则需要指定下载参数。</span><br><span class="line">-<span class="ruby">DCMAKE_INSTALL_PREFIX=<span class="regexp">/opt/freeware</span><span class="regexp">/mysql-8.0.0 \     # 指定安装前缀，默认为 /usr</span><span class="regexp">/local/mysql</span></span></span><br><span class="line"><span class="ruby">-DCPACK_MONOLITHIC_INSTALL=<span class="literal">true</span> \                      <span class="comment"># 生成一个安装包，还是多个安装包</span></span></span><br><span class="line"><span class="ruby">-DDEFAULT_CHARSET=utf8mb4 \                            <span class="comment"># 指定默认字符集</span></span></span><br><span class="line"><span class="ruby">-DDEFAULT_COLLATION=utf8mb4_general_ci \               <span class="comment"># 指定默认字符集校验规则</span></span></span><br><span class="line"><span class="ruby">-DTMPDIR=<span class="regexp">/tmp \                                        # 指定默认临时文件目录</span></span></span><br><span class="line"><span class="ruby">-DWITH_ARCHIVE_STORAGE_ENGINE=<span class="number">1</span> \                      <span class="comment"># 开启ARCHIVE存储引擎</span></span></span><br><span class="line"><span class="ruby">-DWITH_BLACKHOLE_STORAGE_ENGINE=<span class="number">1</span> \                    <span class="comment"># 开启BLACKHOLE存储引擎</span></span></span><br><span class="line"><span class="ruby">-DWITH_PERFSCHEMA_STORAGE_ENGINE=<span class="number">1</span> \                   <span class="comment"># 开启PERFSCHEMA存储引擎</span></span></span><br><span class="line"><span class="ruby">-DENABLED_LOCAL_INFILE=<span class="number">1</span> \                             <span class="comment"># 开启支持本地操作文件权限</span></span></span><br><span class="line"><span class="ruby">-DWITH_EMBEDDED_SERVER=<span class="number">0</span> \                             <span class="comment"># 关闭嵌入式服务器</span></span></span><br><span class="line"><span class="ruby">-DWITH_TEST_TRACE_PLUGIN=<span class="number">0</span> \                           <span class="comment"># 关闭测试跟踪插件</span></span></span><br><span class="line"><span class="ruby">-DWITH_KEYRING_TEST=<span class="number">0</span> \                                <span class="comment"># 关闭KEYRING测试</span></span></span><br><span class="line"><span class="ruby">-DINSTALL_MYSQLTESTDIR= \                              <span class="comment"># 不安装测试文件</span></span></span><br><span class="line"><span class="ruby">-DWITH_SYSTEMD=<span class="number">0</span>                                       <span class="comment"># 是否支持systemd 启动,在 redhat7等，systemd 系统上启用，其他系统可以不用这个参数。</span></span></span><br><span class="line"><span class="ruby"></span></span><br><span class="line"><span class="ruby"><span class="comment"># 编译  -j4 以4个job（即线程）编译</span></span></span><br><span class="line"><span class="ruby">make -j4</span></span><br><span class="line"><span class="ruby"></span></span><br><span class="line"><span class="ruby"><span class="comment"># 安装</span></span></span><br><span class="line"><span class="ruby">make install</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初始化数据库  </p>
+<ol>
+<li><p>编辑配置文件</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">useradd -<span class="keyword">m</span> mysql</span><br><span class="line">passwd mysql</span><br><span class="line">su - mysql</span><br><span class="line"><span class="built_in">mkdir</span> mysql8</span><br><span class="line"><span class="keyword">cd</span> mysql8</span><br><span class="line"><span class="built_in">mkdir</span> bin data pid <span class="built_in">log</span> mylogs</span><br><span class="line"><span class="keyword">cd</span> bin</span><br><span class="line"><span class="keyword">cp</span> /<span class="keyword">opt</span>/freeware/mysql8.<span class="number">0.0</span>/support-<span class="keyword">files</span>/my-default.<span class="keyword">cnf</span> my.<span class="keyword">cnf</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">vim</span> my.<span class="keyword">cnf</span></span><br><span class="line"># 参考上面my.ini配置</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初始化数据字典</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; mysqld <span class="params">--defaults-file=</span>~<span class="string">/mysql8/bin/my.cnf</span> <span class="params">--initialize</span> <span class="params">--user=mysql</span></span><br><span class="line"><span class="comment"># root密码记录在错误日志中</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+<li><p>启动数据库服务器并修改root密码</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">启动：</span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> mysqld --defaults-file=~/mysql8/bin/my.cnf</span></span><br><span class="line"></span><br><span class="line">另起一个终端：</span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> mysql -uroot -p  --socket=/tmp/mysql-3306.sock</span></span><br><span class="line"></span><br><span class="line">登录后</span><br><span class="line"><span class="meta">mysql&gt;</span><span class="bash"> alter user <span class="string">'root'</span>@<span class="string">'localhost'</span> identified by <span class="string">'root'</span>;</span></span><br><span class="line"><span class="meta">mysql&gt;</span><span class="bash"> flush privileges;</span></span><br><span class="line">退出后，可使用新密码登录。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建启动脚本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; vim start.sh</span><br><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">nohup mysqld_safe --defaults-file=./my.cnf &amp;</span><br><span class="line"></span><br><span class="line">shell&gt; chmod +x start.sh</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建停库脚本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">mysqladmin shutdown -uroot -p -S /tmp/mysql-3306.sock</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果在编译时参数<code>-DWITH_SYSTEMD=1</code>，开启支持<code>systemd</code>方式启动的话，则不会生成<code>mysqld_safe</code>命令，上面的启动脚本就不能工作，需要执行下列步骤启用<code>systemd</code>方式启动。</p>
+<ol>
+<li><p>复制脚本到指定位置。在MySQL安装目录下，有<code>usr</code>目录，如下：</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; cd opt/freeware/mysql<span class="string">-8</span>.0.0</span><br><span class="line">shell&gt; ls -l</span><br><span class="line">drwxr-xr-x  2 root root  4096 2016<span class="string">-10</span><span class="string">-12</span> 16:10:05 bin</span><br><span class="line">-rw-r--r--  1 root root 17987 2016<span class="string">-08</span><span class="string">-25</span> 20:32:09 COPYING</span><br><span class="line">drwxr-xr-x  2 root root    55 2016<span class="string">-10</span><span class="string">-12</span> 16:09:39 docs</span><br><span class="line">drwxr-xr-x  3 root root  4096 2016<span class="string">-10</span><span class="string">-12</span> 16:09:41 include</span><br><span class="line">drwxr-xr-x  4 root root   172 2016<span class="string">-10</span><span class="string">-12</span> 16:10:04 lib</span><br><span class="line">drwxr-xr-x  4 root root    30 2016<span class="string">-10</span><span class="string">-12</span> 16:09:58 man</span><br><span class="line">-rw-r--r--  1 root root  2478 2016<span class="string">-08</span><span class="string">-25</span> 20:32:09 README</span><br><span class="line">drwxr-xr-x 28 root root  4096 2016<span class="string">-10</span><span class="string">-12</span> 16:10:06 share</span><br><span class="line">drwxr-xr-x  2 root root   112 2016<span class="string">-10</span><span class="string">-12</span> 16:10:06 support-files</span><br><span class="line">drwxr-xr-x  3 root root    17 2016<span class="string">-10</span><span class="string">-12</span> 16:10:05 usr</span><br><span class="line"></span><br><span class="line"># 复制usr目录里的文件到系统的/usr对应目录里</span><br><span class="line">shell&gt; cp -rp usr /usr</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编辑MySQL的参数文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">shell&gt;</span><span class="bash"> vim /etc/my.cnf</span></span><br><span class="line">[mysqld]</span><br><span class="line"></span><br><span class="line"><span class="meta"> #</span><span class="bash"> Remove leading <span class="comment"># and set to the amount of RAM for the most important data</span></span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> cache <span class="keyword">in</span> MySQL. Start at 70% of total RAM <span class="keyword">for</span> dedicated server, <span class="keyword">else</span> 10%.</span></span><br><span class="line"> innodb_buffer_pool_size = 128M</span><br><span class="line"></span><br><span class="line"><span class="meta"> #</span><span class="bash"> Remove leading <span class="comment"># to turn on a very important data integrity option: logging</span></span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> changes to the binary <span class="built_in">log</span> between backups.</span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> log_bin</span></span><br><span class="line"></span><br><span class="line"><span class="meta"> #</span><span class="bash"> These are commonly <span class="built_in">set</span>, remove the <span class="comment"># and set as required.</span></span></span><br><span class="line"> basedir = /opt/freeware/mysql-8.0.0</span><br><span class="line"> datadir = /home/mysql/mysql8/data</span><br><span class="line"> port = 3306</span><br><span class="line"> server_id = 1</span><br><span class="line"> socket = /tmp/mysql-3306.sock</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> init_connect = 'SET NAMES utf8mb4'</span><br><span class="line"> init_connect = 'set autocommit = 0'  </span><br><span class="line"> transaction_isolation = READ-COMMITTED</span><br><span class="line"> lower_case_table_names = 1</span><br><span class="line"> skip-external-locking</span><br><span class="line"></span><br><span class="line"><span class="meta"> #</span><span class="bash"> Remove leading <span class="comment"># to set options mainly useful for reporting servers.</span></span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> The server defaults are faster <span class="keyword">for</span> transactions and fast SELECTs.</span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> Adjust sizes as needed, experiment to find the optimal values.</span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> join_buffer_size = 128M</span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> sort_buffer_size = 2M</span></span><br><span class="line"><span class="meta"> #</span><span class="bash"> read_rnd_buffer_size = 2M</span></span><br><span class="line"></span><br><span class="line"> sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>启动MySQL服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看mysqld服务状态</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl status mysqld</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl start mysqld</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 停止</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl stop mysqld</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl restart mysqld</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置开机启动MySQL服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 设置开机启动</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl <span class="built_in">enable</span> mysqld</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭开机启动</span></span><br><span class="line"><span class="meta">shell&gt;</span><span class="bash"> systemctl <span class="built_in">disable</span> mysqld</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql2.html" data-title="MySQL 安装 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql3.html" title="连接MySQL">
+  <strong>上一篇：</strong><br>
+  <span>
+  连接MySQL</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql1.html" title="认识MySQL">
+ <strong>下一篇：</strong><br> 
+ <span>认识MySQL
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql2.html" data-title="MySQL 安装" data-url="http://mydba.xyz/mysql/163/mysql2.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#轻松安装MySQL"><span class="toc-text">轻松安装MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#windows-下的安装"><span class="toc-text">windows 下的安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Linux-下的安装"><span class="toc-text">Linux 下的安装</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

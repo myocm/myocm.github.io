@@ -1,0 +1,583 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 5 视图重写与等价谓词重写 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 5 视图重写与等价谓词重写">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op5.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20171227110559653.png">
+<meta property="og:updated_time" content="2017-12-27T02:24:21.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 5 视图重写与等价谓词重写">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20171227110559653.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op5.html" title="MySQL优化 -- 5 视图重写与等价谓词重写" itemprop="url">MySQL优化 -- 5 视图重写与等价谓词重写</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2017-12-27T02:24:21.000Z" itemprop="datePublished"> 发表于 2017-12-27</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#视图重写与等价谓词重写"><span class="toc-text">视图重写与等价谓词重写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-View-and-View-Rewrite"><span class="toc-text">What is View and View Rewrite ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#视图的类型："><span class="toc-text">视图的类型：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是视图重写"><span class="toc-text">什么是视图重写?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL视图重写准则："><span class="toc-text">MySQL视图重写准则：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-optimize-view-with-View-Rewrite-for-MySQL"><span class="toc-text">How to optimize view with View Rewrite for MySQL ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Equivalent-Predicate-Rewrite"><span class="toc-text">What is Equivalent Predicate Rewrite ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-do-Equivalent-Predicate-Rewrite-for-MySQL"><span class="toc-text">How to do Equivalent Predicate Rewrite for MySQL ?</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="视图重写与等价谓词重写"><a href="#视图重写与等价谓词重写" class="headerlink" title="视图重写与等价谓词重写"></a>视图重写与等价谓词重写</h1><p>View Rewrite and Equivalent Predicate Rewrite</p>
+<h2 id="What-is-View-and-View-Rewrite"><a href="#What-is-View-and-View-Rewrite" class="headerlink" title="What is View and View Rewrite ?"></a>What is View and View Rewrite ?</h2><p>什么是视图?<br>视图是数据库中基于表的一种对象, 把对表的查询固化,这种固化就是视图。</p>
+<p>注意区分:<br>    视图(只有视图定义部分，不含数据)<------>物化视图（把视图查询的结果生成一张表固定下来）<------>物化(技术)(把查询结果临时保存到内存的一种优化方法)<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span></span><br><span class="line">    [<span class="keyword">OR</span> <span class="keyword">REPLACE</span>]</span><br><span class="line">    [ALGORITHM = &#123;UNDEFINED | <span class="keyword">MERGE</span> | TEMPTABLE&#125;]</span><br><span class="line">    [DEFINER = &#123; <span class="keyword">user</span> | <span class="keyword">CURRENT_USER</span> &#125;]</span><br><span class="line">        [<span class="keyword">SQL</span> <span class="keyword">SECURITY</span> &#123; DEFINER | INVOKER &#125;]</span><br><span class="line">        <span class="keyword">VIEW</span> view_name [(column_list)]</span><br><span class="line">        <span class="keyword">AS</span> select_statement</span><br><span class="line">        [<span class="keyword">WITH</span> [<span class="keyword">CASCADED</span> | <span class="keyword">LOCAL</span>] <span class="keyword">CHECK</span> <span class="keyword">OPTION</span>]</span><br></pre></td></tr></table></figure></------></------></p>
+<h3 id="视图的类型："><a href="#视图的类型：" class="headerlink" title="视图的类型："></a>视图的类型：</h3><ol>
+<li><p>用 SPJ(select-project-join) 格式构造的视图，称为简单视图。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> v1 <span class="keyword">AS</span> <span class="keyword">SELECT</span> x, y, z <span class="keyword">FROM</span> t;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用非SPJ格式构造的视图（带有GROUP BY等操作），称为复杂视图。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> v2 <span class="keyword">AS</span> <span class="keyword">SELECT</span> x, y, z <span class="keyword">FROM</span> t <span class="keyword">ORDER</span> <span class="keyword">BY</span> x;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="什么是视图重写"><a href="#什么是视图重写" class="headerlink" title="什么是视图重写?"></a>什么是视图重写?</h3><ol>
+<li>查询语句中出现视图对象</li>
+<li>查询优化后,视图对象消失</li>
+<li>消失的视图对象的查询语句, 融合到初始查询语句中</li>
+</ol>
+<p>视图重写示例<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t_a(a <span class="built_in">INT</span>, b <span class="built_in">INT</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> v_a <span class="keyword">AS</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t_a;</span><br></pre></td></tr></table></figure></p>
+<p>基于视图的查询命令如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> col_a <span class="keyword">FROM</span> v_a <span class="keyword">WHERE</span> col_b&gt;<span class="number">100</span>;</span><br></pre></td></tr></table></figure></p>
+<p>经过视图重写后可变换为如下形式：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> col_a <span class="keyword">FROM</span></span><br><span class="line">(</span><br><span class="line">    <span class="keyword">SELECT</span> col_a, col_b <span class="keyword">FROM</span> t_a</span><br><span class="line">)</span><br><span class="line"><span class="keyword">WHERE</span> col_b&gt;<span class="number">100</span>;</span><br></pre></td></tr></table></figure></p>
+<p>未来经过优化，可以变换为如下等价形式：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> col_a <span class="keyword">FROM</span> t_a <span class="keyword">WHERE</span> col_b&gt;<span class="number">100</span>;</span><br></pre></td></tr></table></figure></p>
+<h3 id="MySQL视图重写准则："><a href="#MySQL视图重写准则：" class="headerlink" title="MySQL视图重写准则："></a>MySQL视图重写准则：</h3><ol>
+<li><p>MySQL支持对视图进行优化。</p>
+</li>
+<li><p>优化方法是把视图转为对基表的查询，然后进行类似子查询的优化。</p>
+</li>
+<li><p>MySQL通常只能重写简单视图，复杂视图不能重写。</p>
+</li>
+</ol>
+<p><img src="/img/markdown-img-paste-20171227110559653.png" alt="视图重写"></p>
+<h2 id="How-to-optimize-view-with-View-Rewrite-for-MySQL"><a href="#How-to-optimize-view-with-View-Rewrite-for-MySQL" class="headerlink" title="How to optimize view with View Rewrite for MySQL ?"></a>How to optimize view with View Rewrite for MySQL ?</h2><p>MySQL视图重写示例—数据准备：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (a1 <span class="built_in">int</span> <span class="keyword">UNIQUE</span>, b1 <span class="built_in">int</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t2 (a2 <span class="built_in">int</span> <span class="keyword">UNIQUE</span>, b2 <span class="built_in">int</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t3 (a3 <span class="built_in">int</span> <span class="keyword">UNIQUE</span>, b3 <span class="built_in">int</span>);</span><br></pre></td></tr></table></figure></p>
+<p>创建简单视图：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> v_t_1_2 <span class="keyword">AS</span></span><br><span class="line">    <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, t2;</span><br></pre></td></tr></table></figure></p>
+<p>创建复杂视图：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> v_t_gd_1_2 <span class="keyword">AS</span></span><br><span class="line">    <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> t1.b1, t2.b2</span><br><span class="line">    <span class="keyword">FROM</span> t1, t2</span><br><span class="line">    <span class="keyword">GROUP</span> <span class="keyword">BY</span> t1.b1, t2.b2;</span><br></pre></td></tr></table></figure></p>
+<p>MySQL视图重写示例1：<br>在简单视图上执行连接操作。<br>直接用视图和表做连接操作，查询执行计划如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1, v_t_1_2 WHERE t1.a1&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                 |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t1    | range | a1            | a1   | 5       | NULL |    1 |   100.00 | Using index condition                 |</span><br><span class="line">|  1 | SIMPLE      | t1    | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">|  1 | SIMPLE      | t2    | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> <span class="keyword">AS</span> <span class="string">`a2`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`b2`</span> <span class="keyword">AS</span> <span class="string">`b2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>)</span><br></pre></td></tr></table></figure></p>
+<p>在表上执行与简单视图等价的连接操作<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1, (SELECT * FROM t1, t2) t12 WHERE t1.a1&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">| id | select_type | table      | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                 |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1         | range | a1            | a1   | 5       | NULL |    1 |   100.00 | Using index condition                 |</span><br><span class="line">|  1 | PRIMARY     | &lt;derived2&gt; | ALL   | NULL          | NULL | NULL    | NULL |    2 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">|  2 | DERIVED     | t1         | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | NULL                                  |</span><br><span class="line">|  2 | DERIVED     | t2         | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">4 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`t12`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`t12`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`t12`</span>.<span class="string">`a2`</span> <span class="keyword">AS</span> <span class="string">`a2`</span>,<span class="string">`t12`</span>.<span class="string">`b2`</span> <span class="keyword">AS</span> <span class="string">`b2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> <span class="keyword">AS</span> <span class="string">`a2`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`b2`</span> <span class="keyword">AS</span> <span class="string">`b2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="string">`t12`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>)</span><br><span class="line"><span class="comment">-- MySQL 对视图和子查询的优化是不同的。</span></span><br></pre></td></tr></table></figure></p>
+<p>MySQL视图重写示例2：<br>在简单视图上进行聚集操作。<br>基于表t1和t2的视图v_t_1_2，进行聚集操作：  </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT *, (SELECT max(a1) FROM v_t_1_2) FROM t1 WHERE t1.a1&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                   |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | range | a1            | a1   | 5       | NULL |    1 |   100.00 | Using index condition   |</span><br><span class="line">|  2 | SUBQUERY    | NULL  | NULL  | NULL          | NULL | NULL    | NULL | NULL |     NULL | No matching min/max row |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-------------------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,(<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">max</span>(<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="keyword">AS</span> <span class="string">`(SELECT max(a1) FROM v_t_1_2)`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>)</span><br><span class="line"><span class="comment">-- 视图的子查询没有被消除，但是视图被重写，用基表代替了视图。</span></span><br></pre></td></tr></table></figure>
+<p>MySQL视图重写示例3：<br>直接用视图和表做连接操作，并执行分组操作：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT a1, a3 FROM t3, v_t_1_2 WHERE a1&lt;20 GROUP BY a1, a3;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                                           |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | index | NULL          | a3   | 5       | NULL |    1 |   100.00 | Using index; Using temporary; Using filesort                    |</span><br><span class="line">|  1 | SIMPLE      | t1    | index | a1            | a1   | 5       | NULL |    1 |   100.00 | Using where; Using index; Using join buffer (Block Nested Loop) |</span><br><span class="line">|  1 | SIMPLE      | t2    | index | NULL          | a2   | 5       | NULL |    1 |   100.00 | Using index; Using join buffer (Block Nested Loop)              |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>) <span class="keyword">group</span> <span class="keyword">by</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span></span><br><span class="line"><span class="comment">-- 简单视图被重写了，说明 GROUP BY 对简单视图的优化没有影响</span></span><br></pre></td></tr></table></figure></p>
+<p>MySQL视图重写示例4：<br>直接用视图和表做连接操作，并执行分组和去重操作操作：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT DISTINCT a1, a3 FROM t3, v_t_1_2 WHERE a1&lt;20</span><br><span class="line">    -&gt; GROUP BY a1, a3;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                                           |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | index | NULL          | a3   | 5       | NULL |    1 |   100.00 | Using index; Using temporary; Using filesort                    |</span><br><span class="line">|  1 | SIMPLE      | t1    | index | a1            | a1   | 5       | NULL |    1 |   100.00 | Using where; Using index; Using join buffer (Block Nested Loop) |</span><br><span class="line">|  1 | SIMPLE      | t2    | index | NULL          | a2   | 5       | NULL |    1 |   100.00 | Using index; Distinct; Using join buffer (Block Nested Loop)    |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+------+---------+------+------+----------+-----------------------------------------------------------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>) <span class="keyword">group</span> <span class="keyword">by</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span></span><br></pre></td></tr></table></figure></p>
+<p>MySQL视图重写示例5：<br>在简单视图上执行外连接操作。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t3 LEFT JOIN v_t_1_2 V ON V.a1=t3.a3</span><br><span class="line">    -&gt;  WHERE V.a1&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------------+------+----------+---------------------------------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref        | rows | filtered | Extra                                 |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------------+------+----------+---------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | ALL  | a3            | NULL | NULL    | NULL       |    1 |   100.00 | NULL                                  |</span><br><span class="line">|  1 | SIMPLE      | t1    | ref  | a1            | a1   | 5       | test.t3.a3 |    1 |   100.00 | Using index condition                 |</span><br><span class="line">|  1 | SIMPLE      | t2    | ALL  | NULL          | NULL | NULL    | NULL       |    1 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------------+------+----------+---------------------------------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> <span class="keyword">AS</span> <span class="string">`a2`</span>,<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`b2`</span> <span class="keyword">AS</span> <span class="string">`b2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> = <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; <span class="number">20</span>))</span><br></pre></td></tr></table></figure></p>
+<p>MySQL视图重写示例6：<br>直接用复杂视图和表做连接操作，查询执行计划如下：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t3, v_t_gd_1_2 WHERE t3.a3&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">| id | select_type | table      | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                 |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t3         | range | a3            | a3   | 5       | NULL |    1 |   100.00 | Using index condition                 |</span><br><span class="line">|  1 | PRIMARY     | &lt;derived2&gt; | ALL   | NULL          | NULL | NULL    | NULL |    2 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">|  2 | DERIVED     | t1         | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using temporary; Using filesort       |</span><br><span class="line">|  2 | DERIVED     | t2         | ALL   | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+------+---------+------+------+----------+---------------------------------------+</span></span><br><span class="line">4 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 查询优化器优化后的语句：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span>,<span class="string">`v_t_gd_1_2`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span>,<span class="string">`v_t_gd_1_2`</span>.<span class="string">`b2`</span> <span class="keyword">AS</span> <span class="string">`b2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`v_t_gd_1_2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> &lt; <span class="number">20</span>)</span><br><span class="line"><span class="comment">-- 复杂视图不被 MySQL 优化</span></span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>MySQL只对简单视图进行优化，优化方法为视图重写，重写后还会进行进一步的子查询优化，不对复杂视图进行优化。</p>
+</blockquote>
+<h2 id="What-is-Equivalent-Predicate-Rewrite"><a href="#What-is-Equivalent-Predicate-Rewrite" class="headerlink" title="What is Equivalent Predicate Rewrite ?"></a>What is Equivalent Predicate Rewrite ?</h2><p>等价谓词重写：<br>把逻辑表达式重写成<strong>等价</strong>的且效率更高的形式  </p>
+<p>优点：<br>能有效提高查询执行效率</p>
+<p>常见的等价谓词重写示例1：  </p>
+<ul>
+<li>LIKE规则</li>
+</ul>
+<p>LIKE谓词，是SQL标准支持的一种模式匹配比较操作；<br>LIKE规则，是对LIKE谓词的等价重写，即改写LIKE谓词为其他等价的谓词，以更好地利用索引进行优化。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">示例如：</span><br><span class="line">  name LIKE 'Abc%'</span><br><span class="line">重写为</span><br><span class="line">  name &gt;='Abc' AND name &lt;'Abd'</span><br><span class="line">```  </span><br><span class="line">应用LIKE规则的好处：  </span><br><span class="line">转换前针对LIKE谓词，只能进行全表扫描，如果name列上存在索引，则转换后可以进行索引扫描。</span><br><span class="line"></span><br><span class="line">LIKE其他形式还可以转换：  </span><br><span class="line">LIKE匹配的表达式中，没有通配符（`%`或`_`），则与“=”等价，</span><br><span class="line">```sql</span><br><span class="line">如：  </span><br><span class="line">  name LIKE 'Abc'  </span><br><span class="line">重写为：  </span><br><span class="line">  name ='Abc'</span><br></pre></td></tr></table></figure></p>
+<p>如果name列上存在索引，则可以利用索引提高查询效率  </p>
+<ul>
+<li>BETWEEN-AND规则<br>BETWEEN-AND谓词，是SQL标准支持的一种范围比较操作；<br>BETWEEN-AND规则，是BETWEEN-AND谓词的等价重写，即改写BETWEEN-AND谓词为其他等价的谓词，以更好地利用索引进行优化。  <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">如：  </span><br><span class="line">  sno BETWEEN 10 AND 20  </span><br><span class="line">重写为：  </span><br><span class="line">  sno&gt;=10 AND sno &lt;=20</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>应用BETWEEN-AND规则的好处是：<br>如果sno上建立了索引，则可以用索引扫描代替原来BETWEEN-AND谓词限定的全表扫描，从而提高了查询的效率。  </p>
+<ul>
+<li>IN转换OR规则：<br>IN是只IN操作符操作，不是IN子查询。<br>IN转换OR规则，就是IN谓词的OR等价重写，即改写IN谓词为等价的OR谓词，以更好地利用索引进行优化。<br>将IN谓词等价重写为若干个OR谓词，<strong>可能</strong> 会提高执行效率。  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">如：</span><br><span class="line">   age IN (8，12，21)</span><br><span class="line">重写为：</span><br><span class="line">  age=8 OR age=12 OR age=21</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>应用IN转换OR规则后效率是否能够提高，需要看数据库对IN谓词是否只支持全表扫描。</p>
+<p>如果数据库对IN谓词只支持全表扫描且OR谓词中表的age列上存在索引，则转换后查询效率会提高。</p>
+<ul>
+<li>IN转换ANY规则</li>
+</ul>
+<p>IN转换ANY规则，就是IN谓词的ANY等价重写，即改写IN谓词为等价的ANY谓词。</p>
+<p>IN可以转换为OR，OR可以转为ANY，所以可以直接把IN转换为ANY。<br>将IN谓词等价重写为ANY谓词，可能会提高执行效率。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">如：</span><br><span class="line">  age IN (8，12，21)</span><br><span class="line">重写为：</span><br><span class="line">  age ANY(8, 12, 21)</span><br></pre></td></tr></table></figure></p>
+<p>应用IN转换ANY规则后效率是否能够提高，依赖于数据库对于ANY操作的支持情况。<br>OR转换ANY规则，就是OR谓词的ANY等价重写，即改写OR谓词为等价的ANY谓词，以更好地利用MIN/MAX操作进行优化。<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">如：</span><br><span class="line">  sal&gt;1000 OR</span><br><span class="line">  dno=3 AND (sal&gt;1100 OR sal&gt;base_sal+100) OR</span><br><span class="line">  sal&gt;base_sal+200 OR</span><br><span class="line">  sal&gt;base_sal×2</span><br><span class="line"></span><br><span class="line">重写为：</span><br><span class="line">  dno=3 AND (sal&gt;1100 OR sal&gt;base_sal+100) OR</span><br><span class="line">  sal&gt; ANY (1000,base_sal+200,base_sal×2)</span><br></pre></td></tr></table></figure></p>
+<p>OR转换ANY规则，依赖于数据库对于ANY操作的支持情况。</p>
+<p>PostgreSQL V9.2.3和MySQL V5.6.10目前都不支持本条规则。</p>
+<ul>
+<li>ALL/ANY转换集函数规则<br>就是ALL/ANY谓词改写为等价的聚集函数MIN/MAX谓词操作，以更好地利用MIN/MAX操作进行优化。<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">如：</span><br><span class="line">  sno&gt;ANY(10, 2*5+3,sqrt(9))</span><br><span class="line">重写为：</span><br><span class="line">  sno&gt;sqrt(9)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>上面这个ALL/ANY转换集函数规则的示例，有两点需要注意：</p>
+<ol>
+<li>示例中存在“&gt;”和“ANY”，其意是在找出<code>(10, 2*5+3,sqrt(9))</code>中的最小值，所以可以重写为<code>sno&gt;sqrt(9)</code>。<br>通常，聚集函数MAX()、MIN()等的执行效率一般都比ANY、ALL谓词的执行效率高，因此在这种情况下对其进行重写，可以起到比较好的效果。</li>
+<li>如果有索引存在，求解MAX/MIN的效率更高。</li>
+</ol>
+<ul>
+<li>NOT规则</li>
+</ul>
+<p>NOT谓词的等价重写，如下：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">NOT (col_1 !=2)    重写为  col_1=2</span><br><span class="line">NOT (col_1 !=col_2)重写为  col_1=col_2</span><br><span class="line">NOT (col_1 =col_2) 重写为  col_1!=col_2</span><br><span class="line">NOT (col_1 &lt;col_2) 重写为  col_1&gt;=col_2</span><br><span class="line">NOT (col_1 &gt;col_2) 重写为  col_1&lt;=col_2</span><br></pre></td></tr></table></figure></p>
+<p>NOT规则重写的好处：<br>  如果col_1上建立了索引，则可以用索引扫描代替原来的全表扫描，从而提高查询的效率。</p>
+<ul>
+<li><p>OR重写并集规则</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">OR条件重写为并集操作，形如下SQL示例：</span><br><span class="line">  <span class="keyword">SELECT</span> *</span><br><span class="line">  <span class="keyword">FROM</span> student</span><br><span class="line">  <span class="keyword">WHERE</span>(sex=’f’ <span class="keyword">AND</span> age&gt;<span class="number">15</span>) <span class="keyword">OR</span> age&gt;<span class="number">18</span>；</span><br></pre></td></tr></table></figure>
+<p>假设所有条件表达式的列上都有索引（即sex列和age列上都存在索引），数据库可能对于示例中的WHERE语句强迫查询优化器使用顺序    扫描，因为这个语句要检索的是OR操作的集合。</p>
+<p>为了能利用索引处理上面的查询，可以将语句改成如下形式：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> *</span><br><span class="line"><span class="keyword">FROM</span> student</span><br><span class="line"><span class="keyword">WHERE</span> sex=’f’ <span class="keyword">and</span> age&gt;<span class="number">15</span></span><br><span class="line"><span class="keyword">UNION</span></span><br><span class="line"><span class="keyword">SELECT</span> *</span><br><span class="line"><span class="keyword">FROM</span> student</span><br><span class="line"><span class="keyword">WHERE</span> age&gt;<span class="number">18</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>改写后的形式，可以分别利用列sex和age上的索引，进行索引扫描，然后再提供执行UNION操作获得最终结果。</p>
+<h2 id="How-to-do-Equivalent-Predicate-Rewrite-for-MySQL"><a href="#How-to-do-Equivalent-Predicate-Rewrite-for-MySQL" class="headerlink" title="How to do Equivalent Predicate Rewrite for MySQL ?"></a>How to do Equivalent Predicate Rewrite for MySQL ?</h2><p>?</p>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op5.html" data-title="MySQL优化 -- 5 视图重写与等价谓词重写 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op6.html" title="MySQL优化 -- 6 条件简化">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 6 条件简化</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/optimization/op4.html" title="MySQL优化 -- 4 子查询的优化（二）">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 4 子查询的优化（二）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op5.html" data-title="MySQL优化 -- 5 视图重写与等价谓词重写" data-url="http://mydba.xyz/mysql/optimization/op5.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#视图重写与等价谓词重写"><span class="toc-text">视图重写与等价谓词重写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-View-and-View-Rewrite"><span class="toc-text">What is View and View Rewrite ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#视图的类型："><span class="toc-text">视图的类型：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是视图重写"><span class="toc-text">什么是视图重写?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL视图重写准则："><span class="toc-text">MySQL视图重写准则：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-optimize-view-with-View-Rewrite-for-MySQL"><span class="toc-text">How to optimize view with View Rewrite for MySQL ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Equivalent-Predicate-Rewrite"><span class="toc-text">What is Equivalent Predicate Rewrite ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-do-Equivalent-Predicate-Rewrite-for-MySQL"><span class="toc-text">How to do Equivalent Predicate Rewrite for MySQL ?</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

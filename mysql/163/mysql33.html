@@ -1,0 +1,608 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL5.7新特性 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL5.7新特性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL5.7新特性">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql33.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL5.7新特性">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161111161507737.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161111162051691.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161111163801686.png">
+<meta property="og:updated_time" content="2016-11-11T08:13:23.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL5.7新特性">
+<meta name="twitter:description" content="MySQL5.7新特性">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20161111161507737.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql33.html" title="MySQL5.7新特性" itemprop="url">MySQL5.7新特性</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-11-11T08:13:23.000Z" itemprop="datePublished"> 发表于 2016-11-11</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL5-7新特性"><span class="toc-text">MySQL5.7新特性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL版本时间轴"><span class="toc-text">MySQL版本时间轴</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL5-7-简介"><span class="toc-text">MySQL5.7 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#功能"><span class="toc-text">功能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JSON"><span class="toc-text">JSON</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安全性"><span class="toc-text">安全性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#虚拟列"><span class="toc-text">虚拟列</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能"><span class="toc-text">性能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#只读事务"><span class="toc-text">只读事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#临时表"><span class="toc-text">临时表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#并行复制"><span class="toc-text">并行复制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#基准测试对比"><span class="toc-text">基准测试对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运维"><span class="toc-text">运维</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#InnoDB-Buffer-Pool-动态修改"><span class="toc-text">InnoDB Buffer Pool 动态修改</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sys-schema"><span class="toc-text">sys schema</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在线修改表结构"><span class="toc-text">在线修改表结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="MySQL5-7新特性"><a href="#MySQL5-7新特性" class="headerlink" title="MySQL5.7新特性"></a>MySQL5.7新特性</h1><h2 id="MySQL版本时间轴"><a href="#MySQL版本时间轴" class="headerlink" title="MySQL版本时间轴"></a>MySQL版本时间轴</h2><p><img src="/img/markdown-img-paste-20161111161507737.png" alt=""></p>
+<h2 id="MySQL5-7-简介"><a href="#MySQL5-7-简介" class="headerlink" title="MySQL5.7 简介"></a>MySQL5.7 简介</h2><ul>
+<li>更强大的功能：原生JSON支持；新增安全性功能；新增地理位置支持GeoJSON，GeoHash特性</li>
+<li>更强大的性能：某些场景性能较MySQL5.6提升2-3倍，Innodb只读事务优化；临时表改进；并行复制优化</li>
+<li>更强大的运维：InnoDB Buffer Pool动态修改；sys schema引入；在线修改表结构等</li>
+</ul>
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><h3 id="JSON"><a href="#JSON" class="headerlink" title="JSON"></a>JSON</h3><ul>
+<li>原生支持JSON。包括字段的JSON类型和一系列JSON处理函数</li>
+<li>BLOB存储</li>
+<li>混合存储结构化与非结构化数据</li>
+<li>事务特性<br><img src="/img/markdown-img-paste-20161111162051691.png" alt=""></li>
+</ul>
+<h3 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h3><ul>
+<li>初始化数据库： root密码由空变成了随机密码；不在自动创建test数据库</li>
+<li><p>设置密码过期策略</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">USER</span> <span class="string">'user'</span>@<span class="string">'localhost'</span> <span class="keyword">PASSWORD</span> <span class="keyword">EXPIRE</span> <span class="built_in">INTERVAL</span> <span class="number">30</span> <span class="keyword">DAY</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>锁定用户、解锁用户</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">USER</span> <span class="string">'user'</span>@<span class="string">'localhost'</span> <span class="keyword">ACCOUNT</span> <span class="keyword">LOCK</span>;</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">USER</span> <span class="string">'user'</span>@<span class="string">'localhost'</span> <span class="keyword">ACCOUNT</span> <span class="keyword">UNLOCK</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="虚拟列"><a href="#虚拟列" class="headerlink" title="虚拟列"></a>虚拟列</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> order_lines(</span><br><span class="line">orderid <span class="built_in">bigint</span>,</span><br><span class="line">userid <span class="built_in">bigint</span>,</span><br><span class="line">price <span class="built_in">decimal</span>(<span class="number">10</span>,<span class="number">2</span>)</span><br><span class="line">qty <span class="built_in">int</span>,</span><br><span class="line">sum_price <span class="built_in">decimal</span>(<span class="number">10</span>,<span class="number">2</span>) <span class="keyword">generated</span></span><br><span class="line"><span class="keyword">always</span> <span class="keyword">as</span> (qty*price) <span class="keyword">stored</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>STORED</th>
+<th>VIRTUAL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary &amp; secondary index</td>
+<td>secondary index only</td>
+</tr>
+<tr>
+<td>B-TREE, Full text search,R-TREE</td>
+<td>B-TREE only</td>
+</tr>
+<tr>
+<td>Duplication of data in base table and index</td>
+<td>less storage</td>
+</tr>
+<tr>
+<td>Independent of SE</td>
+<td>Requires SE support</td>
+</tr>
+<tr>
+<td>Online operation</td>
+<td>Online operation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h2><h3 id="只读事务"><a href="#只读事务" class="headerlink" title="只读事务"></a>只读事务</h3><ul>
+<li>绝大多数业务都是读多写少，优化只读事务意义重大</li>
+<li>只读事务<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">start</span> <span class="keyword">transaction</span> <span class="keyword">read</span> <span class="keyword">only</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>autocommit 下的不加锁的select语句</p>
+<ul>
+<li>MySQL5.7 通过不再为只读事务分配事务ID，不分配回滚段，降低内存开销，减少锁竞争等多种方式，优化了只读事务的开销</li>
+</ul>
+<h3 id="临时表"><a href="#临时表" class="headerlink" title="临时表"></a>临时表</h3><ul>
+<li>临时表：不需要严格一致性，重启MySQL或断开连接生命周期结束；只在当前会话中可见</li>
+<li>优化策略：<ul>
+<li>元数据修改不持久化</li>
+<li>DML操作不写redo，关闭change buffer</li>
+<li>通过减少不必要的IO操作，提高临时表各种操作的性能</li>
+</ul>
+</li>
+</ul>
+<h3 id="并行复制"><a href="#并行复制" class="headerlink" title="并行复制"></a>并行复制</h3><ul>
+<li>基于MariaDB并行复制策略的改进，提升提交并行度</li>
+<li>基于组提交的并行复制：从库按照主库的事务提交顺序提交，一个组提交的事务都是可以并行回放的</li>
+<li>slave-parallel-type：<ul>
+<li>DATABASE（默认） 基于库的并行复制方式</li>
+<li>LOGICAL_CLOCK</li>
+</ul>
+</li>
+</ul>
+<h3 id="基准测试对比"><a href="#基准测试对比" class="headerlink" title="基准测试对比"></a>基准测试对比</h3><p><img src="/img/markdown-img-paste-20161111163801686.png" alt=""></p>
+<h2 id="运维"><a href="#运维" class="headerlink" title="运维"></a>运维</h2><h3 id="InnoDB-Buffer-Pool-动态修改"><a href="#InnoDB-Buffer-Pool-动态修改" class="headerlink" title="InnoDB Buffer Pool 动态修改"></a>InnoDB Buffer Pool 动态修改</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="builtin-name">set</span> global <span class="attribute">innodb_buffer_pool_size</span>=402653184;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>innodb_buffer_pool_size=N<em>(innodb_buffer_pool_chunk_size</em>innodb_buffer_pool_instances)</li>
+<li>调整buffer pool的过程，用户的新请求都会堵塞</li>
+<li>查看buffer pool 调整状态<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">STATUS</span> <span class="keyword">WHERE</span> variable_name=<span class="string">'innodb_buffer_pool_resize_status'</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>或者 查看 error log</p>
+<h3 id="sys-schema"><a href="#sys-schema" class="headerlink" title="sys schema"></a>sys schema</h3><ul>
+<li>sys schema 是MySQL5.7.7中引入的一个系统库，包含了一系列视图、函数和存储过程</li>
+<li>包含：系统运行状态；用户会话信息与资源占用；数据对象信息；SQL执行情况；索引覆盖；锁信息</li>
+<li>基于performance schma的汇总与统计</li>
+<li><a href="http://dev.mysql.com/doc/refman/5.7/en/sys-schema.html" target="_blank" rel="noopener">官方手册</a></li>
+<li><p>全表扫描的查询语句</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> statements_with_full_table_scans;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用户会话信息与资源占用</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span>  host_summary;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>InnoDB锁等待情况</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span>  innodb_lock_waits;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="在线修改表结构"><a href="#在线修改表结构" class="headerlink" title="在线修改表结构"></a>在线修改表结构</h3><ul>
+<li>在线修改表结构<ul>
+<li>是否拷贝表；是否允许DML；是否允许select</li>
+</ul>
+</li>
+<li>MySQL5.7版本新增alter table rename index 无需copy table</li>
+<li>支持较好的操作：新增索引、删除索引、重命名字段</li>
+<li>支持不好的操作：新增字段、删除字段、修改字段类型</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>MySQL5.7 是未来的趋势，拥抱变化</li>
+<li>可运维性、易用性提升明显</li>
+<li>在合适的场合选择合理的MySQL版本</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql33.html" data-title="MySQL5.7新特性 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op1.html" title="MySQL优化 -- 1 数据库与关系代数">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 1 数据库与关系代数</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql32.html" title="MySQL分布式架构">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL分布式架构
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql33.html" data-title="MySQL5.7新特性" data-url="http://mydba.xyz/mysql/163/mysql33.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL5-7新特性"><span class="toc-text">MySQL5.7新特性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL版本时间轴"><span class="toc-text">MySQL版本时间轴</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL5-7-简介"><span class="toc-text">MySQL5.7 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#功能"><span class="toc-text">功能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#JSON"><span class="toc-text">JSON</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安全性"><span class="toc-text">安全性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#虚拟列"><span class="toc-text">虚拟列</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能"><span class="toc-text">性能</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#只读事务"><span class="toc-text">只读事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#临时表"><span class="toc-text">临时表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#并行复制"><span class="toc-text">并行复制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#基准测试对比"><span class="toc-text">基准测试对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运维"><span class="toc-text">运维</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#InnoDB-Buffer-Pool-动态修改"><span class="toc-text">InnoDB Buffer Pool 动态修改</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sys-schema"><span class="toc-text">sys schema</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在线修改表结构"><span class="toc-text">在线修改表结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

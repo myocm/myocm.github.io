@@ -1,0 +1,539 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>安装  percona-zabbix-templates | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="zabbix 安装  percona 模板 for mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安装  percona-zabbix-templates">
+<meta property="og:url" content="http://mydba.xyz/zabbix/percona-zabbix-templates.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="zabbix 安装  percona 模板 for mysql">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-12-05T03:40:19.357Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安装  percona-zabbix-templates">
+<meta name="twitter:description" content="zabbix 安装  percona 模板 for mysql">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/zabbix/percona-zabbix-templates.html" title="安装  percona-zabbix-templates" itemprop="url">安装  percona-zabbix-templates</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-08-18T10:01:53.000Z" itemprop="datePublished"> 发表于 2016-08-18</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境"><span class="toc-text">环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#准备工作"><span class="toc-text">准备工作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装php-php-mysql"><span class="toc-text">安装php php-mysql</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-安装-php5-6-的源"><span class="toc-text">1. 安装 php5.6 的源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-安装-php5-6"><span class="toc-text">2. 安装 php5.6</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-测试php安装成功"><span class="toc-text">3. 测试php安装成功</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-安装-percona-的-repository"><span class="toc-text">1. 安装 percona 的 repository</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Configure-Zabbix-Agent"><span class="toc-text">2. Configure Zabbix Agent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-配置MySQL-connectivity-on-Agent"><span class="toc-text">3. 配置MySQL connectivity on Agent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Configure-Zabbix-Server"><span class="toc-text">4. Configure Zabbix Server</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>Centos 6.5<br>zabbix 2.4.6<br>mysql5.7.9</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="安装php-php-mysql"><a href="#安装php-php-mysql" class="headerlink" title="安装php php-mysql"></a>安装php php-mysql</h3><h4 id="1-安装-php5-6-的源"><a href="#1-安装-php5-6-的源" class="headerlink" title="1. 安装 php5.6 的源"></a>1. 安装 php5.6 的源</h4>   <figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rpm -Uvh <span class="symbol">http:</span>/<span class="regexp">/ftp.iij.ad.jp/pub</span><span class="regexp">/linux/fedora</span><span class="regexp">/epel/</span><span class="number">6</span>/x86_64/epel-release-<span class="number">6</span>-<span class="number">8</span>.noarch.rpm   </span><br><span class="line">rpm -Uvh <span class="symbol">http:</span>/<span class="regexp">/rpms.famillecollet.com/enterprise</span><span class="regexp">/remi-release-6.rpm</span></span><br></pre></td></tr></table></figure>
+<h4 id="2-安装-php5-6"><a href="#2-安装-php5-6" class="headerlink" title="2. 安装 php5.6"></a>2. 安装 php5.6</h4>   <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install <span class="attribute">--enablerepo</span>=remi <span class="attribute">--enablerepo</span>=remi-php56 php php-opcache php-devel php-mbstring php-mcrypt php-mysqlnd php-phpunit-PHPUnit php-pecl-xdebug php-pecl-xhprof</span><br></pre></td></tr></table></figure>
+<h4 id="3-测试php安装成功"><a href="#3-测试php安装成功" class="headerlink" title="3. 测试php安装成功"></a>3. 测试php安装成功</h4>   <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">php -v</span></span><br></pre></td></tr></table></figure>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="1-安装-percona-的-repository"><a href="#1-安装-percona-的-repository" class="headerlink" title="1. 安装 percona 的 repository"></a>1. 安装 percona 的 repository</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum <span class="keyword">install</span> <span class="keyword">http</span>://www.percona.com/downloads/percona-<span class="keyword">release</span>/redhat/<span class="number">0.1</span><span class="number">-3</span>/percona-<span class="keyword">release</span><span class="number">-0.1</span><span class="number">-3.</span>noarch.rpm</span><br></pre></td></tr></table></figure>
+<h3 id="2-Configure-Zabbix-Agent"><a href="#2-Configure-Zabbix-Agent" class="headerlink" title="2. Configure Zabbix Agent"></a>2. Configure Zabbix Agent</h3><ol>
+<li><p>安装模板</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum <span class="keyword">install</span> percona-zabbix-templates</span><br></pre></td></tr></table></figure>
+<p>模板安装在下列位置</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Scripts are installed to  /var/<span class="class"><span class="keyword">lib</span>/<span class="title">zabbix</span>/<span class="title">percona</span>/<span class="title">scripts</span>  </span></span><br><span class="line">Templates are installed to /var/<span class="class"><span class="keyword">lib</span>/<span class="title">zabbix</span>/<span class="title">percona</span>/<span class="title">templates</span></span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>复制 模板配置文件 <code>/var/lib/zabbix/percona/templates/userparameter_percona_mysql.conf</code> 到 zabbix agent 配置目录 <code>/usr/local/zabbix_agent/etc/zabbix_agentd.conf.d</code></p>
+</li>
+<li><p>编辑<code>zabbix_agentd.conf</code>,包含模板配置</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Include</span>=<span class="regexp">/usr/</span>local<span class="regexp">/zabbix_agent/</span>etc<span class="regexp">/zabbix_agentd.conf.d/</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重启zabbix-agent</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">service zabbix-agentd restart</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="3-配置MySQL-connectivity-on-Agent"><a href="#3-配置MySQL-connectivity-on-Agent" class="headerlink" title="3. 配置MySQL connectivity on Agent"></a>3. 配置MySQL connectivity on Agent</h3><ol>
+<li><p>创建php 连接mysql 的配置文件</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">vim /var/<span class="class"><span class="keyword">lib</span>/<span class="title">zabbix</span>/<span class="title">percona</span>/<span class="title">scripts</span>/<span class="title">ss_get_mysql_stats</span>.<span class="title">php</span>.<span class="title">cnf</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加如下内容,修改为自己mysql的用户名，密码，端口</span></span><br><span class="line">&lt;?php   </span><br><span class="line">$mysql_user = <span class="string">'root'</span>;</span><br><span class="line">$mysql_pass = <span class="string">'s3cret'</span>;</span><br><span class="line">$mysql_port = <span class="number">3308</span>;</span><br></pre></td></tr></table></figure>
+<p>这一步也可以不创建配置文件，直接修改<code>/var/lib/zabbix/percona/scripts/ss_get_mysql_stats.php</code>对应的项也可以。</p>
+</li>
+<li><p>因为percona的脚本有bug需要修改<br>如果mysql不是yum 安装，socket文件不在默认位置，可以修改<br><code>get_mysql_stats_wrapper.sh</code> 中的 <code>HOST=127.0.0.1</code><br>另外需要修改两处<code>CACHEFILE</code>,如果不是默认端口，需要添加上端口号。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">CACHEFILE</span>=<span class="string">"/tmp/$HOST-mysql_cacti_stats.txt:3308"</span></span><br><span class="line"><span class="attr">TIMEFLM</span>=`stat -c %Y /tmp/<span class="variable">$HOST</span>-mysql_cacti_stats.txt:<span class="number">3308</span>`</span><br></pre></td></tr></table></figure>
+<p>测试percona脚本</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/var/<span class="class"><span class="keyword">lib</span>/<span class="title">zabbix</span>/<span class="title">percona</span>/<span class="title">scripts</span>/<span class="title">get_mysql_stats_wrapper</span>.<span class="title">sh</span> <span class="title">gg</span></span></span><br></pre></td></tr></table></figure>
+<p>返回数字表示成功。<br>此时<code>/tmp/127.0.0.1-mysql_cacti_stats.txt\:3308</code>文件的属主是root，修改给<code>zabbix</code> 用户。</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cd</span> <span class="string">/tmp</span></span><br><span class="line">chown zabbix<span class="function">:zabbix</span> 127.0.0.1-mysql_cacti_stats.txt\<span class="function">:3308</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置zabbix 用户连接mysql<br>在 zabbix用户home目录创建.my.cnf文件，并输入</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[client]</span></span><br><span class="line"><span class="attr">user</span>=root</span><br><span class="line"><span class="attr">password</span>=s3cret</span><br></pre></td></tr></table></figure>
+<p>修改<code>/var/lib/zabbix/percona/scripts/get_mysql_stats_wrapper.sh</code></p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#RES=`HOME=~zabbix mysql -e <span class="string">'SHOW SLAVE STATUS\G'</span> | egrep <span class="string">'(Slave_IO_Running|Slave_SQL_Running):'</span> | awk -F: <span class="string">'&#123;print $2&#125;'</span> | tr <span class="string">'\n'</span> <span class="string">','</span>`</span><br></pre></td></tr></table></figure>
+<p>为自己的mysql命令路径</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RES=`<span class="regexp">/opt/</span>freeware<span class="regexp">/mysql/</span>bin/mysql -e <span class="string">'SHOW SLAVE STATUS\G'</span> | egrep <span class="string">'(Slave_IO_Running|Slave_SQL_Running):'</span> | awk -<span class="string">F:</span> <span class="string">'&#123;print $2&#125;'</span> | tr <span class="string">'\n'</span> <span class="string">','</span>`</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>测试zabbix 连接 mysql</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo -u zabbix -H /var/<span class="class"><span class="keyword">lib</span>/<span class="title">zabbix</span>/<span class="title">percona</span>/<span class="title">scripts</span>/<span class="title">get_mysql_stats_wrapper</span>.<span class="title">sh</span> <span class="title">running</span>-<span class="title">slave</span></span></span><br></pre></td></tr></table></figure>
+<p>返回0表示主库，返回1表示从库。</p>
+</li>
+</ol>
+<h3 id="4-Configure-Zabbix-Server"><a href="#4-Configure-Zabbix-Server" class="headerlink" title="4. Configure Zabbix Server"></a>4. Configure Zabbix Server</h3><ol>
+<li><p>把 <code>/var/lib/zabbix/percona/templates/zabbix_agent_template_percona_mysql_server_ht_2.0.9-sver1.1.6.xml</code> 下载到本地。</p>
+</li>
+<li><p>Import the XML template using Zabbix UI (Configuration -&gt; Templates -&gt; Import) by additionally choosing “Screens”.<br>此处有坑，xml文件中有两个”MySQL Graphs”，请修改一个，否则报重复。</p>
+</li>
+<li><p>Create/edit hosts by assigning them “Percona Templates” group and linking the template “Percona MySQL Server Template” (Templates tab).   </p>
+</li>
+</ol>
+<hr>
+<p>Good luck！<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/zabbix/">zabbix</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/zabbix/percona-zabbix-templates.html" data-title="安装  percona-zabbix-templates | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/git/git.html" title="git">
+  <strong>上一篇：</strong><br>
+  <span>
+  git</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/其他/second.html" title="新建一篇文章">
+ <strong>下一篇：</strong><br> 
+ <span>新建一篇文章
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="zabbix/percona-zabbix-templates.html" data-title="安装  percona-zabbix-templates" data-url="http://mydba.xyz/zabbix/percona-zabbix-templates.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境"><span class="toc-text">环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#准备工作"><span class="toc-text">准备工作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装php-php-mysql"><span class="toc-text">安装php php-mysql</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-安装-php5-6-的源"><span class="toc-text">1. 安装 php5.6 的源</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-安装-php5-6"><span class="toc-text">2. 安装 php5.6</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-测试php安装成功"><span class="toc-text">3. 测试php安装成功</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-安装-percona-的-repository"><span class="toc-text">1. 安装 percona 的 repository</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Configure-Zabbix-Agent"><span class="toc-text">2. Configure Zabbix Agent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-配置MySQL-connectivity-on-Agent"><span class="toc-text">3. 配置MySQL connectivity on Agent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Configure-Zabbix-Server"><span class="toc-text">4. Configure Zabbix Server</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

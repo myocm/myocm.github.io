@@ -1,0 +1,543 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 6 条件简化 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 6 条件简化">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op6.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-01-02T07:37:57.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 6 条件简化">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op6.html" title="MySQL优化 -- 6 条件简化" itemprop="url">MySQL优化 -- 6 条件简化</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2018-01-02T07:37:57.000Z" itemprop="datePublished"> 发表于 2018-01-02</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#条件简化"><span class="toc-text">条件简化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-condition-of-a-query-statement"><span class="toc-text">What is condition of a query statement ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是条件"><span class="toc-text">什么是条件?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#条件优化技术"><span class="toc-text">条件优化技术</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Condition-Simplification"><span class="toc-text">What is Condition Simplification ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-把HAVING条件并入WHERE条件"><span class="toc-text">1. 把HAVING条件并入WHERE条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-去除表达式中冗余的括号"><span class="toc-text">2. 去除表达式中冗余的括号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-常量传递"><span class="toc-text">3. 常量传递</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-消除死码"><span class="toc-text">4. 消除死码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-表达式计算"><span class="toc-text">5. 表达式计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-等式变换"><span class="toc-text">6. 等式变换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-不等式变换"><span class="toc-text">7. 不等式变换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-布尔表达式变换"><span class="toc-text">8. 布尔表达式变换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#谓词传递闭包"><span class="toc-text">谓词传递闭包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#布尔表达式被转换为一个等价的合取范式（CNF）"><span class="toc-text">布尔表达式被转换为一个等价的合取范式（CNF）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#索引利用"><span class="toc-text">索引利用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Condition-Simplification-of-MySQL"><span class="toc-text">Condition Simplification of MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-把HAVING条件并入WHERE条件：不支持"><span class="toc-text">1. 把HAVING条件并入WHERE条件：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-去除表达式中冗余的括号：支持"><span class="toc-text">2. 去除表达式中冗余的括号：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-常量传递：支持"><span class="toc-text">3. 常量传递：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-消除死码：支持"><span class="toc-text">4. 消除死码：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-表达式计算：支持"><span class="toc-text">5. 表达式计算：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-等式变换：不支持"><span class="toc-text">6. 等式变换：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-不等式变换：不支持"><span class="toc-text">7. 不等式变换：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-布尔表达式变换-1"><span class="toc-text">8. 布尔表达式变换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#谓词传递闭包：不支持"><span class="toc-text">谓词传递闭包：不支持</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#布尔表达式被转换为等价的合取范式：支持"><span class="toc-text">布尔表达式被转换为等价的合取范式：支持</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#索引的利用—AND操作符是可交换的：支持"><span class="toc-text">索引的利用—AND操作符是可交换的：支持</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-IS-NULL表达式优化：支持"><span class="toc-text">9. IS NULL表达式优化：支持</span></a></li></ol></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="条件简化"><a href="#条件简化" class="headerlink" title="条件简化"></a>条件简化</h1><h2 id="What-is-condition-of-a-query-statement"><a href="#What-is-condition-of-a-query-statement" class="headerlink" title="What is condition of a query statement ?"></a>What is condition of a query statement ?</h2><h3 id="什么是条件"><a href="#什么是条件" class="headerlink" title="什么是条件?"></a>什么是条件?</h3><p>SQL查询语句中，对元组进行过滤和连接的表达式<br>形式上是出现在WHERE/JOIN-ON/HAVING的子句中的表达式。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> ...</span><br><span class="line">[<span class="keyword">WHERE</span> where_condition]</span><br><span class="line">[<span class="keyword">HAVING</span> where_condition]</span><br><span class="line"></span><br><span class="line">join_condition:</span><br><span class="line">    <span class="keyword">ON</span> conditional_expr</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>MySQL：Generally, you should use the <strong>ON</strong> clause for <strong>conditions that specify how to join tables</strong>,<br>and the <strong>WHERE</strong> clause to <strong>restrict which rows you want in the result set</strong>.</p>
+</blockquote>
+<h3 id="条件优化技术"><a href="#条件优化技术" class="headerlink" title="条件优化技术"></a>条件优化技术</h3><ul>
+<li>条件下推<br>把与单个表相关的条件，放到对单表进行扫描的过程中执行。  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> *</span><br><span class="line"><span class="keyword">FROM</span> A, B</span><br><span class="line"><span class="keyword">WHERE</span> A.a=<span class="number">1</span> <span class="keyword">and</span> A.b=B.b;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>执行顺序：  </p>
+<ul>
+<li>扫描A表，并带有条件A.a=1，把A表作为嵌套循环的外表  </li>
+<li><p>扫描B表，执行连接操作，并带有过滤条件A.b=B.b</p>
+<blockquote>
+<p>说明：<br>数据库系统都支持条件下推，且无论条件对应的列对象有无索引<br>系统自动进行优化，不用人工介入</p>
+<ul>
+<li>条件化简</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h2 id="What-is-Condition-Simplification"><a href="#What-is-Condition-Simplification" class="headerlink" title="What is Condition Simplification ?"></a>What is Condition Simplification ?</h2><p>条件化简</p>
+<ol>
+<li>WHERE、HAVING和JOIN-ON条件由许多表达式组成，而这些表达式在某些时候彼此之间存在一定的联系。</li>
+<li>利用等式和不等式的性质，可以将WHERE、HAVING和ON条件化简</li>
+<li><p>但不同数据库的实现可能不完全相同。</p>
+<p>常见的条件化简技术</p>
+<h3 id="1-把HAVING条件并入WHERE条件"><a href="#1-把HAVING条件并入WHERE条件" class="headerlink" title="1. 把HAVING条件并入WHERE条件"></a>1. 把HAVING条件并入WHERE条件</h3><p>在SQL语句中不存在GROUPBY条件或聚集函数的情况下，可以将HAVING条件与WHERE条件的进行合并。<br>优点：<br>便于统一、集中化解条件子句，节约多次化解时间。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3&gt;<span class="number">1</span> <span class="keyword">having</span> b3=<span class="number">3</span>;</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| a3 | b3   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line"><span class="comment">-- 可以简化为</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3&gt;<span class="number">1</span> <span class="keyword">and</span> b3=<span class="number">3</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="2-去除表达式中冗余的括号"><a href="#2-去除表达式中冗余的括号" class="headerlink" title="2. 去除表达式中冗余的括号"></a>2. 去除表达式中冗余的括号</h3><p>优点：<br>可以减少语法分析时产生的AND和OR树的层次。—减少CPU的消耗<br>示例：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">((a AND b) AND (c AND d))</span><br><span class="line"><span class="comment">-- 化简为</span></span><br><span class="line">a AND b AND c AND d</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-常量传递"><a href="#3-常量传递" class="headerlink" title="3. 常量传递"></a>3. 常量传递</h3><p>优点：<br>对不同关系可以使得条件分离后有效实施“选择下推”，从而可以极大减小中间关系的规模。<br>示例：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">col_1 = col_2 AND col_2 = 3</span><br><span class="line"><span class="comment">-- 化简为</span></span><br><span class="line">col_1=3 AND col_2=3</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注意：<br>操作符“=、&lt;、&gt;、&lt;=、&gt;=、&lt;&gt;、&lt;=&gt;、LIKE”中的任何一个，在“col_1 &lt;操作符&gt; col_2”条件中都可能会发生常量传递</p>
+</blockquote>
+<h3 id="4-消除死码"><a href="#4-消除死码" class="headerlink" title="4. 消除死码"></a>4. 消除死码</h3><p>化简条件，将不必要的条件去除<br>示例：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WHERE (0 &gt; 1 AND s1 = 5)</span><br></pre></td></tr></table></figure></p>
+<p>“0 &gt; 1”使得AND恒为假，则WHERE条件恒为假。<br>此时就不必要再对该SQL语句进行优化和执行了，加快了查询执行的速度。</p>
+<h3 id="5-表达式计算"><a href="#5-表达式计算" class="headerlink" title="5. 表达式计算"></a>5. 表达式计算</h3><p>对可以求解的表达式，进行计算，得出结果。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">WHERE col_1 = 1 + 2</span><br><span class="line"><span class="comment">-- 化简为</span></span><br><span class="line">WHERE col_1 = 3</span><br></pre></td></tr></table></figure></p>
+<h3 id="6-等式变换"><a href="#6-等式变换" class="headerlink" title="6. 等式变换"></a>6. 等式变换</h3><p> 化简条件（如反转关系操作符的操作数的顺序），从而改变某些表的访问路径<br> <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-a = 3    </span><br><span class="line"><span class="comment">-- 化简为</span></span><br><span class="line">a = -3</span><br><span class="line"><span class="comment">-- 好处是如果a上有索引，则可以利用索引扫描来加快访问。</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="7-不等式变换"><a href="#7-不等式变换" class="headerlink" title="7. 不等式变换"></a>7. 不等式变换</h3><p>化简条件，将不必要的重复条件去除。<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a &gt; 10 AND b = 6 AND a &gt; 2</span><br><span class="line"><span class="comment">-- 化简为</span></span><br><span class="line">b = 6 AND a &gt; 10</span><br></pre></td></tr></table></figure></p>
+<h3 id="8-布尔表达式变换"><a href="#8-布尔表达式变换" class="headerlink" title="8. 布尔表达式变换"></a>8. 布尔表达式变换</h3><h4 id="谓词传递闭包"><a href="#谓词传递闭包" class="headerlink" title="谓词传递闭包"></a>谓词传递闭包</h4><p>   一些比较操作符，如“&lt;”、“&gt;”等，具有传递性，可以起到化简表达式的作用<br>   <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a&gt;b AND b&gt;2</span><br><span class="line"><span class="comment">-- 可以推导出a&gt;b AND b&gt;2 AND a&gt;2，“a&gt;2”是一个隐含条件，</span></span><br><span class="line"><span class="comment">-- 这样把“a&gt;2”和“b&gt;2”分别下推到对应的关系上，</span></span><br><span class="line"><span class="comment">-- 就可以减少参与比较操作“a&gt;b”的元组了</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="布尔表达式被转换为一个等价的合取范式（CNF）"><a href="#布尔表达式被转换为一个等价的合取范式（CNF）" class="headerlink" title="布尔表达式被转换为一个等价的合取范式（CNF）"></a>布尔表达式被转换为一个等价的合取范式（CNF）</h4><p>   任何一个布尔表达式都能被转换为一个等价的合取范式（CNF）<br>   合取范式格式为：C1 AND C2 AND… AND Cn；其中，Ck（1&lt;=k&lt;=n）称为合取项，每个合取项是不包含AND的布尔表达式<br>   说明：<br>   1 合取项只要有一个为假，整个表达式就为假，故代码中可以在发现一个合取项为假时，即停止其他合取项的判断，加快判断速度；<br>   <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WHERE(0 &gt; 1 AND s1 = 5)</span><br></pre></td></tr></table></figure></p>
+<p>   2 另外因为AND操作符是可交换的，所以优化器可以按照先易后难的顺序计算表达式，一旦发现一个合取项为假时，即停止其他合取项的判断，加快判断速度。<br>   <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">WHERE(A.a+B.b &gt; 100 AND A.b = 5 AND 0 &gt; 1 )</span><br><span class="line"><span class="comment">-- 先求解：0 &gt; 1 ，值为假，其他不再求解</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="索引利用"><a href="#索引利用" class="headerlink" title="索引利用"></a>索引利用</h4><p>   如果一个合取项上存在索引，则先判断索引是否可用，如能利用索引快速得出合取项的值，则能加快判断速度。<br>   同理，OR表达式中的子项也可以利用索引<br>   <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">WHERE (A.a&gt; 100 AND A.b = 5 AND... )</span><br><span class="line"><span class="comment">-- 情况1：A表的a列上存在索引，b列无索引，则利用a上的索引找出元组，“A.b = 5” 作为过滤条件使用</span></span><br><span class="line"><span class="comment">-- 情况2：A表的a列上不存在索引，b列有索引，则利用b上的索引找出元组，“A.a&gt; 100” 作为过滤条件使用</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="Condition-Simplification-of-MySQL"><a href="#Condition-Simplification-of-MySQL" class="headerlink" title="Condition Simplification of MySQL"></a>Condition Simplification of MySQL</h2><h3 id="1-把HAVING条件并入WHERE条件：不支持"><a href="#1-把HAVING条件并入WHERE条件：不支持" class="headerlink" title="1. 把HAVING条件并入WHERE条件：不支持"></a>1. 把HAVING条件并入WHERE条件：不支持</h3><h3 id="2-去除表达式中冗余的括号：支持"><a href="#2-去除表达式中冗余的括号：支持" class="headerlink" title="2. 去除表达式中冗余的括号：支持"></a>2. 去除表达式中冗余的括号：支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3,t1 <span class="keyword">where</span> (a1&gt;<span class="number">1</span>) <span class="keyword">AND</span> ((a3&gt;<span class="number">1</span>) <span class="keyword">and</span> b3=<span class="number">3</span>) ;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------------------------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra                                              |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------------------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | range | PRIMARY       | PRIMARY | 4       | NULL | 5000 | Using where                                        |</span><br><span class="line">|  1 | SIMPLE      | t1    | range | PRIMARY       | PRIMARY | 4       | NULL | 5000 | Using where; Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------------------------------------------------+</span></span><br><span class="line"><span class="comment">-- 查询优化器处理后的语句变形为：</span></span><br><span class="line"><span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span>,</span><br><span class="line"><span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span></span><br><span class="line">.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span></span><br><span class="line"><span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> = <span class="number">3</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &gt; <span class="number">1</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> &gt; <span class="number">1</span>))</span><br></pre></td></tr></table></figure>
+<h3 id="3-常量传递：支持"><a href="#3-常量传递：支持" class="headerlink" title="3. 常量传递：支持"></a>3. 常量传递：支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3,t1 <span class="keyword">where</span> (a3=b3 <span class="keyword">and</span> b3=<span class="number">3</span>) ;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+-------+-------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref   | rows  | Extra |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+-------+-------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | const | PRIMARY       | PRIMARY | 4       | const |     1 | NULL  |</span><br><span class="line">|  1 | SIMPLE      | t1    | ALL   | NULL          | NULL    | NULL    | NULL  | 10001 | NULL  |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+-------+-------+</span></span><br><span class="line"><span class="comment">-- 查询优化器处理后的语句变形为：</span></span><br><span class="line"><span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span>,</span><br><span class="line"><span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span></span><br><span class="line">.<span class="string">`t3`</span> <span class="keyword">join</span> <span class="string">`test`</span>.<span class="string">`t1`</span></span><br><span class="line"><span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> = <span class="number">3</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> = <span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+<h3 id="4-消除死码：支持"><a href="#4-消除死码：支持" class="headerlink" title="4. 消除死码：支持"></a>4. 消除死码：支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> <span class="number">0</span>&gt;<span class="number">1</span> <span class="keyword">and</span> a3&gt;<span class="number">1</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra            |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br><span class="line">|  1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Impossible WHERE |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br></pre></td></tr></table></figure>
+<h3 id="5-表达式计算：支持"><a href="#5-表达式计算：支持" class="headerlink" title="5. 表达式计算：支持"></a>5. 表达式计算：支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3=<span class="number">1</span>+<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref   | rows | Extra |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | const | PRIMARY       | PRIMARY | 4       | const |    1 | NULL  |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br><span class="line"><span class="comment">-- 查询优化器处理后的语句变形为：</span></span><br><span class="line"><span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span></span><br><span class="line"><span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span></span><br><span class="line"> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> = (<span class="number">1</span> + <span class="number">2</span>))</span><br><span class="line"><span class="comment">--</span></span><br><span class="line"> <span class="keyword">EXPLAIN</span> <span class="keyword">EXTENDED</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, t2 <span class="keyword">WHERE</span> <span class="number">0</span>&gt;<span class="number">1</span>+<span class="number">2</span> <span class="keyword">AND</span> a1=<span class="number">10</span>;</span><br><span class="line"> +<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+------------------+</span></span><br><span class="line"> | id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra            |</span><br><span class="line"> +<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+------------------+</span></span><br><span class="line"> |  1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL |     NULL | Impossible WHERE |</span><br><span class="line"> +<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+------------------+</span></span><br></pre></td></tr></table></figure>
+<h3 id="6-等式变换：不支持"><a href="#6-等式变换：不支持" class="headerlink" title="6. 等式变换：不支持"></a>6. 等式变换：不支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> -a3=<span class="number">1</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows  | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | ALL  | NULL          | NULL | NULL    | NULL | 10001 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3=<span class="number">-1</span> ;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref   | rows | Extra |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | const | PRIMARY       | PRIMARY | 4       | const |    1 | NULL  |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+</span></span><br></pre></td></tr></table></figure>
+<h3 id="7-不等式变换：不支持"><a href="#7-不等式变换：不支持" class="headerlink" title="7. 不等式变换：不支持"></a>7. 不等式变换：不支持</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3&gt;<span class="number">1</span> <span class="keyword">and</span> a3&gt;<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | range | PRIMARY       | PRIMARY | 4       | NULL | 5001 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+</span></span><br><span class="line"><span class="comment">-- 查询优化器处理后的语句变形为：</span></span><br><span class="line"><span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span></span><br><span class="line"><span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span></span><br><span class="line"><span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> &gt; <span class="number">1</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> &gt; <span class="number">2</span>))</span><br></pre></td></tr></table></figure>
+<h3 id="8-布尔表达式变换-1"><a href="#8-布尔表达式变换-1" class="headerlink" title="8. 布尔表达式变换"></a>8. 布尔表达式变换</h3><h4 id="谓词传递闭包：不支持"><a href="#谓词传递闭包：不支持" class="headerlink" title="谓词传递闭包：不支持"></a>谓词传递闭包：不支持</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t3 <span class="keyword">where</span> a3&gt;b3 <span class="keyword">and</span> b3&gt;<span class="number">2</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows  | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line">|  1 | SIMPLE      | t3    | ALL  | NULL          | NULL | NULL    | NULL | 10002 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+-------+-------------+</span></span><br><span class="line"><span class="comment">--  查询优化器处理后的语句变形为：</span></span><br><span class="line"><span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> <span class="keyword">AS</span> <span class="string">`a3`</span>,<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> <span class="keyword">AS</span> <span class="string">`b3`</span></span><br><span class="line"><span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t3`</span></span><br><span class="line"><span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`a3`</span> &gt; <span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t3`</span>.<span class="string">`b3`</span> &gt; <span class="number">2</span>))</span><br></pre></td></tr></table></figure>
+<h4 id="布尔表达式被转换为等价的合取范式：支持"><a href="#布尔表达式被转换为等价的合取范式：支持" class="headerlink" title="布尔表达式被转换为等价的合取范式：支持"></a>布尔表达式被转换为等价的合取范式：支持</h4><p> 参见死码消除中的示例</p>
+<h4 id="索引的利用—AND操作符是可交换的：支持"><a href="#索引的利用—AND操作符是可交换的：支持" class="headerlink" title="索引的利用—AND操作符是可交换的：支持"></a>索引的利用—AND操作符是可交换的：支持</h4><blockquote>
+<p>MySQL支持对条件按表连接的次序进行排序，优先判断连接的表涉及的条件</p>
+</blockquote>
+<h3 id="9-IS-NULL表达式优化：支持"><a href="#9-IS-NULL表达式优化：支持" class="headerlink" title="9. IS NULL表达式优化：支持"></a>9. IS NULL表达式优化：支持</h3><p>利用索引，支持“IS NULL”表达式的优化。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`t2`</span> (</span><br><span class="line">  <span class="string">`a`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`b`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`c`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`d`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`e`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`a`</span>,<span class="string">`b`</span>),</span><br><span class="line">  <span class="keyword">KEY</span> <span class="string">`c_DESC_d_DESC`</span> (<span class="string">`c`</span>,<span class="string">`d`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8;</span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> t2 <span class="keyword">where</span> c <span class="keyword">IS</span> <span class="literal">NULL</span>;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra            |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br><span class="line">|  1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Impossible WHERE |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+------------------+</span></span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op6.html" data-title="MySQL优化 -- 6 条件简化 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op7.html" title="MySQL优化 -- 7 外连接消除、嵌套连接消除与连接消除">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 7 外连接消除、嵌套连接消除与连接消除</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/optimization/op5.html" title="MySQL优化 -- 5 视图重写与等价谓词重写">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 5 视图重写与等价谓词重写
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op6.html" data-title="MySQL优化 -- 6 条件简化" data-url="http://mydba.xyz/mysql/optimization/op6.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#条件简化"><span class="toc-text">条件简化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-condition-of-a-query-statement"><span class="toc-text">What is condition of a query statement ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是条件"><span class="toc-text">什么是条件?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#条件优化技术"><span class="toc-text">条件优化技术</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Condition-Simplification"><span class="toc-text">What is Condition Simplification ?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-把HAVING条件并入WHERE条件"><span class="toc-text">1. 把HAVING条件并入WHERE条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-去除表达式中冗余的括号"><span class="toc-text">2. 去除表达式中冗余的括号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-常量传递"><span class="toc-text">3. 常量传递</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-消除死码"><span class="toc-text">4. 消除死码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-表达式计算"><span class="toc-text">5. 表达式计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-等式变换"><span class="toc-text">6. 等式变换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-不等式变换"><span class="toc-text">7. 不等式变换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-布尔表达式变换"><span class="toc-text">8. 布尔表达式变换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#谓词传递闭包"><span class="toc-text">谓词传递闭包</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#布尔表达式被转换为一个等价的合取范式（CNF）"><span class="toc-text">布尔表达式被转换为一个等价的合取范式（CNF）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#索引利用"><span class="toc-text">索引利用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Condition-Simplification-of-MySQL"><span class="toc-text">Condition Simplification of MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-把HAVING条件并入WHERE条件：不支持"><span class="toc-text">1. 把HAVING条件并入WHERE条件：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-去除表达式中冗余的括号：支持"><span class="toc-text">2. 去除表达式中冗余的括号：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-常量传递：支持"><span class="toc-text">3. 常量传递：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-消除死码：支持"><span class="toc-text">4. 消除死码：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-表达式计算：支持"><span class="toc-text">5. 表达式计算：支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-等式变换：不支持"><span class="toc-text">6. 等式变换：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-不等式变换：不支持"><span class="toc-text">7. 不等式变换：不支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-布尔表达式变换-1"><span class="toc-text">8. 布尔表达式变换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#谓词传递闭包：不支持"><span class="toc-text">谓词传递闭包：不支持</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#布尔表达式被转换为等价的合取范式：支持"><span class="toc-text">布尔表达式被转换为等价的合取范式：支持</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#索引的利用—AND操作符是可交换的：支持"><span class="toc-text">索引的利用—AND操作符是可交换的：支持</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-IS-NULL表达式优化：支持"><span class="toc-text">9. IS NULL表达式优化：支持</span></a></li></ol></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

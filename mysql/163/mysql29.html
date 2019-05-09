@@ -1,0 +1,670 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL参数调优 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL参数调优">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL参数调优">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql29.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL参数调优">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108133214912.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108133552224.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108133709267.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108134441183.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108134541895.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108143340403.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108143836193.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108144005727.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108144453251.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108144549466.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161108144820156.png">
+<meta property="og:updated_time" content="2016-11-08T05:27:53.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL参数调优">
+<meta name="twitter:description" content="MySQL参数调优">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20161108133214912.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql29.html" title="MySQL参数调优" itemprop="url">MySQL参数调优</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-11-08T05:27:53.000Z" itemprop="datePublished"> 发表于 2016-11-08</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL参数调优"><span class="toc-text">MySQL参数调优</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么要调整参数"><span class="toc-text">为什么要调整参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#优化之前我们需要知道什么"><span class="toc-text">优化之前我们需要知道什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#服务器关注点"><span class="toc-text">服务器关注点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘调度策略-Write-Back"><span class="toc-text">磁盘调度策略 - Write Back</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘调度策略-Write-Through"><span class="toc-text">磁盘调度策略 - Write Through</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-Back-VS-Write-Through"><span class="toc-text">Write Back VS Write Through</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RAID"><span class="toc-text">RAID</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL有哪些注意事项"><span class="toc-text">MySQL有哪些注意事项</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL的部署安装"><span class="toc-text">MySQL的部署安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL的监控-系统的调优依据"><span class="toc-text">MySQL的监控 - 系统的调优依据</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#重点关注哪些MySQL-Status"><span class="toc-text">重点关注哪些MySQL Status</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL参数调优-1"><span class="toc-text">MySQL参数调优</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#读优化"><span class="toc-text">读优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#写优化"><span class="toc-text">写优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#如何保证事务安全"><span class="toc-text">如何保证事务安全</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#InnoDB-Redo-log"><span class="toc-text">InnoDB Redo log</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Insert-Buffer"><span class="toc-text">Insert Buffer</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="MySQL参数调优"><a href="#MySQL参数调优" class="headerlink" title="MySQL参数调优"></a>MySQL参数调优</h1><h2 id="为什么要调整参数"><a href="#为什么要调整参数" class="headerlink" title="为什么要调整参数"></a>为什么要调整参数</h2><ul>
+<li>不同服务器之间的配置、性能不一样</li>
+<li>不同业务场景对数据的需求不一样</li>
+<li>MySQL的默认参数只是个参考值，并不适合所有的应用场景</li>
+</ul>
+<h2 id="优化之前我们需要知道什么"><a href="#优化之前我们需要知道什么" class="headerlink" title="优化之前我们需要知道什么"></a>优化之前我们需要知道什么</h2><ul>
+<li>服务器相关配置</li>
+<li>业务相关情况</li>
+<li>MySQL相关配置</li>
+</ul>
+<h2 id="服务器关注点"><a href="#服务器关注点" class="headerlink" title="服务器关注点"></a>服务器关注点</h2><ul>
+<li>硬件情况</li>
+<li>操作系统版本</li>
+<li>CPU、网卡节电模式</li>
+<li>服务器numa设置</li>
+<li>RAID缓存<br><img src="/img/markdown-img-paste-20161108133214912.png" alt="">  </li>
+</ul>
+<h3 id="磁盘调度策略-Write-Back"><a href="#磁盘调度策略-Write-Back" class="headerlink" title="磁盘调度策略 - Write Back"></a>磁盘调度策略 - Write Back</h3><ul>
+<li>数据写入cache即返回，数据异步地从cache刷入存储介质<br><img src="/img/markdown-img-paste-20161108133552224.png" alt=""><h3 id="磁盘调度策略-Write-Through"><a href="#磁盘调度策略-Write-Through" class="headerlink" title="磁盘调度策略 - Write Through"></a>磁盘调度策略 - Write Through</h3></li>
+<li>数据同时写入cache和存储介质才返回写入成功<br><img src="/img/markdown-img-paste-20161108133709267.png" alt=""></li>
+</ul>
+<h3 id="Write-Back-VS-Write-Through"><a href="#Write-Back-VS-Write-Through" class="headerlink" title="Write Back VS Write Through"></a>Write Back VS Write Through</h3><ul>
+<li>Write Back 性能优于 Write Through</li>
+<li>Write Through 比 Write Back 安全性高</li>
+</ul>
+<h3 id="RAID"><a href="#RAID" class="headerlink" title="RAID"></a>RAID</h3><ul>
+<li><p>RAID （<code>R</code>edundant <code>A</code>rray of <code>I</code>ndependent <code>D</code>isks）</p>
+<ul>
+<li>生产环境里一般不太会用裸设备，通常会使用RAID卡对一块盘或多块盘做RAID</li>
+<li>RAID卡会预留一块内存，来保证数据高效的存储与读取</li>
+<li>常见的RAID类型有：RAID1、RAID0、RAID10和RAID5</li>
+</ul>
+</li>
+<li><p>RAID0 VS RAID1<br><img src="/img/markdown-img-paste-20161108134441183.png" alt=""></p>
+</li>
+<li><p>RAID5 VS RAID10<br><img src="/img/markdown-img-paste-20161108134541895.png" alt=""></p>
+</li>
+<li><p>RAID如何保证数据安全</p>
+<ul>
+<li>BBU（<code>B</code>ackup <code>B</code>attery <code>U</code>nit）<br>BBU保证在WB策略下，即使服务器发生掉电或宕机，也能够将缓存中的数据写入到磁盘，从而保证数据的安全</li>
+</ul>
+</li>
+</ul>
+<h2 id="MySQL有哪些注意事项"><a href="#MySQL有哪些注意事项" class="headerlink" title="MySQL有哪些注意事项"></a>MySQL有哪些注意事项</h2><h3 id="MySQL的部署安装"><a href="#MySQL的部署安装" class="headerlink" title="MySQL的部署安装"></a>MySQL的部署安装</h3><ul>
+<li>推荐的MySQL版本 &gt;= MySQL5.5</li>
+<li>推荐的MySQL存储引擎： InnoDB</li>
+</ul>
+<h3 id="MySQL的监控-系统的调优依据"><a href="#MySQL的监控-系统的调优依据" class="headerlink" title="MySQL的监控 - 系统的调优依据"></a>MySQL的监控 - 系统的调优依据</h3><ul>
+<li>实时监控MySQL的Slow Log</li>
+<li>实时监控数据库服务器的负载情况</li>
+<li>实时监控MySQL内部状态值<ul>
+<li>binlog文件大小（MB）</li>
+<li>BufferPool命中率（%）</li>
+<li>CPU利用率（%）</li>
+<li>磁盘读操作延时（ms/op）</li>
+<li>磁盘读取字节数（KB/s）</li>
+<li>磁盘读取次数（次/秒）</li>
+<li>占用磁盘存储空间（MB）</li>
+<li>磁盘写操作延时（ms/op）</li>
+<li>磁盘写入字节数（KB/s）</li>
+<li>磁盘写入次数（次/秒）</li>
+<li>磁盘IO利用率（%）</li>
+<li>占用内存量（MB）</li>
+<li>内存使用率（%）</li>
+<li>一般事务提交操作（次/秒）</li>
+<li>删除操作（次/秒）</li>
+<li>插入操作（次/秒）</li>
+<li>查询操作（次/秒）</li>
+<li>更新操作（次/秒）</li>
+<li>二阶段事务提交操作（次/秒）</li>
+</ul>
+</li>
+</ul>
+<h4 id="重点关注哪些MySQL-Status"><a href="#重点关注哪些MySQL-Status" class="headerlink" title="重点关注哪些MySQL Status"></a>重点关注哪些MySQL Status</h4><ul>
+<li>Com_Select/Update/Delete/Insert</li>
+<li>Bytes_received/Bytes_sent</li>
+<li>Buffer Pool Hit Rate</li>
+<li>Threads_connected/Threads_created/Threads_running</li>
+</ul>
+<h3 id="MySQL参数调优-1"><a href="#MySQL参数调优-1" class="headerlink" title="MySQL参数调优"></a>MySQL参数调优</h3><h4 id="读优化"><a href="#读优化" class="headerlink" title="读优化"></a>读优化</h4><ul>
+<li>合理利用索引对MySQL查询性能至关重要</li>
+<li><p>适当的调整MySQL参数也能提升查询性能</p>
+</li>
+<li><p>innodb_buffer_pool_size</p>
+<ul>
+<li>InnoDB存储引擎自己维护一块内存区域完成新老数据的替换</li>
+</ul>
+</li>
+<li>innodb_thread_concurrency<ul>
+<li>InnoDB内部并发控制参数，设置为0代表不做控制</li>
+<li>如果并发请求较多，参数设置较小，后进来的请求将会排队</li>
+</ul>
+</li>
+</ul>
+<h4 id="写优化"><a href="#写优化" class="headerlink" title="写优化"></a>写优化</h4><ul>
+<li>表结构设计上使用自增字段作为表的主键</li>
+<li>只对合适的字段加索引，索引太多影响写入性能</li>
+<li>监控服务器磁盘IO情况，如果写延迟较大则需要扩容</li>
+<li><p>选择正确的MySQL版本，合理设置参数</p>
+</li>
+<li><p>有助于提高写入性能的参数</p>
+<ul>
+<li>innodb_flush_log_at_trx_commit &amp;&amp; sync_binlog</li>
+<li>innodb log file size</li>
+<li>innodb_io_capacity</li>
+<li>innodb insert buffer</li>
+</ul>
+</li>
+<li><p>主要影响MySQL写性能的两个参数</p>
+<ul>
+<li>innodb_flush_log_at_trx_commit</li>
+<li>sync_binlog</li>
+</ul>
+</li>
+<li><p>innodb_flush_log_at_trx_commit<br>控制InnoDB事务的刷新方式，一共有三个值：0,1,2<br>N=0 - 每隔一秒，把事务日志缓存区的数据写到日志文件中，以及把日志文件的数据刷新到磁盘上（高效，但不安全）<br>N=1 - 每个事务提交的时候，就把事务日志从缓存区写到日志文件中，并且刷新日志文件的数据到磁盘上，优先使用此模式保障数据安全性（低效，非常安全）<br>N=2 - 每个事务提交的时候，把事务日志从缓存区写到日志文件中；每隔一秒，刷新一次日志文件，但不一定刷新到磁盘上，而是取决于操作系统的调度（高效，但不安全）</p>
+</li>
+<li><p>sync_binlog<br>控制每次写入binlog，是否都需要进行一次持久化</p>
+</li>
+</ul>
+<h4 id="如何保证事务安全"><a href="#如何保证事务安全" class="headerlink" title="如何保证事务安全"></a>如何保证事务安全</h4><ul>
+<li>innodb_flush_log_at_trx_commit 和 sync_binlog 都设置为 1</li>
+<li><p>事务要和binlog保持一致性<br><img src="/img/markdown-img-paste-20161108143340403.png" alt=""></p>
+</li>
+<li><p>串行有哪些问题</p>
+<ul>
+<li>SAS盘一般每秒只能有150-200个Fsync</li>
+<li>换算到数据库每秒只能执行50~60个事务</li>
+</ul>
+</li>
+<li><p>社区和官方的改进</p>
+<ul>
+<li>MariaDB 提出改进，即使这两个参数都是1也能做到合并效果，性能得到了大幅提高</li>
+<li>官方吸收了MariaDB的思想，并在此基础上进行了改进，性能再次得到了提高<br>※ 官方在MySQL5.6版本之后才做了这个优化<br>※ Percona和MariaDB版本在MySQL5.5已经包含了这个优化</li>
+</ul>
+</li>
+<li><p>性能提升<br><img src="/img/markdown-img-paste-20161108143836193.png" alt=""></p>
+</li>
+</ul>
+<h4 id="InnoDB-Redo-log"><a href="#InnoDB-Redo-log" class="headerlink" title="InnoDB Redo log"></a>InnoDB Redo log</h4><p>Write ahead log （WAL）<br><img src="/img/markdown-img-paste-20161108144005727.png" alt=""></p>
+<ul>
+<li><p>Redo log有哪些问题</p>
+<ul>
+<li>如果写入频繁导致Redo log 里对应的最老的数据脏页还没有刷新到磁盘，此时数据库将卡住，强制刷新脏页到磁盘</li>
+<li>MySQL 默认配置两个文件才10M，非常容易写满，生产环境中应适当调整大小</li>
+</ul>
+</li>
+<li><p>innodb_io_capacity</p>
+<ul>
+<li>InnoDB每次刷多少个脏页，决定InnoDB存储引擎的吞吐能力</li>
+<li>在SSD等高性能存储介质下，应该提高该参数以提高数据库的性能</li>
+</ul>
+</li>
+</ul>
+<h4 id="Insert-Buffer"><a href="#Insert-Buffer" class="headerlink" title="Insert Buffer"></a>Insert Buffer</h4><ul>
+<li><p>顺序读写 VS 随机读写<br><img src="/img/markdown-img-paste-20161108144453251.png" alt=""></p>
+</li>
+<li><p>随机请求性能远小于顺序请求<br><img src="/img/markdown-img-paste-20161108144549466.png" alt=""></p>
+</li>
+</ul>
+<p>※ 将尽可能多的 随机请求合并为顺序请求才是提高数据库性能的关键</p>
+<ul>
+<li>MySQL从5.1 版本开始支持Insert Buffer</li>
+<li>MySQL5.5版本之后同时支持update和delete的Merge</li>
+<li>Insert Buffer 只对二级索引且非唯一索引有效<br><img src="/img/markdown-img-paste-20161108144820156.png" alt=""></li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>服务器配置要合理（内核版本、磁盘调度策略、RAID卡缓存）</li>
+<li>完善的监控系统，提前发现问题</li>
+<li>数据库版本要跟上，不要太新，也不要太老</li>
+<li>数据库性能优化：<br>查询优化：索引优化为主，参数优化为辅<br>写入优化：业务优化为主，参数优化为辅</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql29.html" data-title="MySQL参数调优 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql30.html" title="MySQL高可用架构">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL高可用架构</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql28.html" title="MySQL日常运维">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL日常运维
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql29.html" data-title="MySQL参数调优" data-url="http://mydba.xyz/mysql/163/mysql29.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL参数调优"><span class="toc-text">MySQL参数调优</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么要调整参数"><span class="toc-text">为什么要调整参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#优化之前我们需要知道什么"><span class="toc-text">优化之前我们需要知道什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#服务器关注点"><span class="toc-text">服务器关注点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘调度策略-Write-Back"><span class="toc-text">磁盘调度策略 - Write Back</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘调度策略-Write-Through"><span class="toc-text">磁盘调度策略 - Write Through</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-Back-VS-Write-Through"><span class="toc-text">Write Back VS Write Through</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RAID"><span class="toc-text">RAID</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL有哪些注意事项"><span class="toc-text">MySQL有哪些注意事项</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL的部署安装"><span class="toc-text">MySQL的部署安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL的监控-系统的调优依据"><span class="toc-text">MySQL的监控 - 系统的调优依据</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#重点关注哪些MySQL-Status"><span class="toc-text">重点关注哪些MySQL Status</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL参数调优-1"><span class="toc-text">MySQL参数调优</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#读优化"><span class="toc-text">读优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#写优化"><span class="toc-text">写优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#如何保证事务安全"><span class="toc-text">如何保证事务安全</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#InnoDB-Redo-log"><span class="toc-text">InnoDB Redo log</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Insert-Buffer"><span class="toc-text">Insert Buffer</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

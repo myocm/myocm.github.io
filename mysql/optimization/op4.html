@@ -1,0 +1,551 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 4 子查询的优化（二） | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 4 子查询的优化（二）">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op4.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-12-19T10:07:17.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 4 子查询的优化（二）">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op4.html" title="MySQL优化 -- 4 子查询的优化（二）" itemprop="url">MySQL优化 -- 4 子查询的优化（二）</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2017-12-19T10:07:17.000Z" itemprop="datePublished"> 发表于 2017-12-19</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#子查询的优化（二）"><span class="toc-text">子查询的优化（二）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL可以优化什么格式的子查询？"><span class="toc-text">MySQL可以优化什么格式的子查询？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL支持哪些子查询的优化技术-？"><span class="toc-text">MySQL支持哪些子查询的优化技术 ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL支持对哪些类型的子查询进行优化"><span class="toc-text">MySQL支持对哪些类型的子查询进行优化 ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL子查询总结"><span class="toc-text">MySQL子查询总结</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="子查询的优化（二）"><a href="#子查询的优化（二）" class="headerlink" title="子查询的优化（二）"></a>子查询的优化（二）</h1><p>Logical Query Optimization Subquery (2)</p>
+<h2 id="MySQL可以优化什么格式的子查询？"><a href="#MySQL可以优化什么格式的子查询？" class="headerlink" title="MySQL可以优化什么格式的子查询？"></a>MySQL可以优化什么格式的子查询？</h2><p>MySQL支持对简单SELECT查询中的子查询优化，包括：</p>
+<ul>
+<li>简单SELECT查询中的子查询。</li>
+<li>带有DISTINCT、ORDER BY、LIMIT操作的简单SELECT查询中的子查询。</li>
+</ul>
+<p>例1：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (a1 <span class="built_in">INT</span>, b1 <span class="built_in">INT</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t2 (a2 <span class="built_in">INT</span>, b2 <span class="built_in">INT</span>);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t3 (a3 <span class="built_in">INT</span>, b3 <span class="built_in">INT</span>);</span><br><span class="line">插入10000行数据。</span><br><span class="line"></span><br><span class="line">查询执行计划如下</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1&lt;100 AND a1 IN (SELECT a2 FROM t2 WHERE t2.a2 &gt;10);</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">| id | select_type  | table       | type   | possible_keys | key        | key_len | ref        | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE       | t1          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE       | &lt;subquery2&gt; | eq_ref | &lt;auto_key&gt;    | &lt;auto_key&gt; | 4       | test.t1.a1 |    1 |   100.00 | NULL        |</span><br><span class="line">|  2 | MATERIALIZED | t2          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br></pre></td></tr></table></figure></p>
+<p>MySQL不支持对如下情况的子查询进行优化：  </p>
+<ul>
+<li>带有UNION操作。</li>
+<li>带有GROUP BY、HAVING、聚集函数。</li>
+<li>使用ORDER BY中带有LIMIT。</li>
+<li>内表、外表的个数超过MySQL支持的最大表的连接数（63个表）。</li>
+</ul>
+<p>例2：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (a1 <span class="built_in">INT</span>, b1 <span class="built_in">INT</span>, PRIMARY <span class="keyword">KEY</span> (a1));</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t2 (a2 <span class="built_in">INT</span>, b2 <span class="built_in">INT</span>, PRIMARY <span class="keyword">KEY</span> (a2));</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t3 (a3 <span class="built_in">INT</span>, b3 <span class="built_in">INT</span>, PRIMARY <span class="keyword">KEY</span> (a3));</span><br><span class="line">插入10000行数据。</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1&gt;(SELECT MIN(t2.a2) FROM t2);</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                        |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | range | PRIMARY       | PRIMARY | 4       | NULL | 5000 |   100.00 | Using where                  |</span><br><span class="line">|  2 | SUBQUERY    | NULL  | NULL  | NULL          | NULL    | NULL    | NULL | NULL |     NULL | <span class="keyword">Select</span> <span class="keyword">tables</span> optimized away |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="MySQL支持哪些子查询的优化技术-？"><a href="#MySQL支持哪些子查询的优化技术-？" class="headerlink" title="MySQL支持哪些子查询的优化技术 ？"></a>MySQL支持哪些子查询的优化技术 ？</h2><ol>
+<li><p>子查询合并技术,不支持<br>例3：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 表结构同例2</span></span><br><span class="line">mysql&gt; explain EXTENDED SELECT * FROM t1 WHERE a1&lt;4 AND (EXISTS (SELECT a2 FROM t2 WHERE t2.a2&lt;5 AND t2.b2=1) OR EXISTS (SELECT a2 FROM t2 WHERE t2.a2&lt;5 AND t2.b2=2) );</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | range | PRIMARY       | PRIMARY | 4       | NULL |    4 |   100.00 | Using where |</span><br><span class="line">|  3 | SUBQUERY    | t2    | range | PRIMARY       | PRIMARY | 4       | NULL |    5 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | range | PRIMARY       | PRIMARY | 4       | NULL |    5 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line"><span class="comment">-- t2表上执行了2次子查询,如果支持子查询合并技术,则t2表上只执行一次子查询</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="comment">--语义等价的 SQL 语句</span></span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE a1&lt;10 AND EXISTS (SELECT a2 FROM t2 WHERE t2.a2&lt;5 AND (t2.b2=1 OR t2.b2=2));</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | range | PRIMARY       | PRIMARY | 4       | NULL |   10 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | range | PRIMARY       | PRIMARY | 4       | NULL |    5 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+-------------+</span></span><br><span class="line"><span class="comment">-- 人为的合并查询条件为“(t2.b2=1 OR t2.b2=2)”</span></span><br><span class="line"><span class="comment">-- t2表上的子查询，只执行一次</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>子查询展开（子查询反嵌套）技术,支持得不够好<br>例4：  </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 表结构同例2</span></span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1, (SELECT * FROM t2 WHERE t2.a2 &gt;10) v_t2 WHERE t1.a1&lt;10 AND v_t2.a2&lt;20;</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------------------+</span></span><br><span class="line">| id | select_type | table      | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                                              |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1         | range | PRIMARY       | PRIMARY | 4       | NULL |   10 |   100.00 | Using where                                        |</span><br><span class="line">|  1 | PRIMARY     | &lt;derived2&gt; | ALL   | NULL          | NULL    | NULL    | NULL | 5000 |   100.00 | Using where; Using join buffer (Block Nested Loop) |</span><br><span class="line">|  2 | DERIVED     | t2         | range | PRIMARY       | PRIMARY | 4       | NULL | 5000 |   100.00 | Using where                                        |</span><br><span class="line">+<span class="comment">----+-------------+------------+-------+---------------+---------+---------+------+------+----------+----------------------------------------------------+</span></span><br><span class="line"><span class="comment">-- 在表t2上的子查询被单独执行，</span></span><br><span class="line"><span class="comment">-- 没和表t1进行了嵌套循环连接，子查询没有被消除，</span></span><br><span class="line"><span class="comment">-- 所以MySQL支持子查询反嵌套技术有限</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="comment">--表结构同例1</span></span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1&lt;100 AND a1 IN (SELECT a2 FROM t2 WHERE t2.a2 &gt;10);</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">| id | select_type  | table       | type   | possible_keys | key        | key_len | ref        | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE       | t1          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE       | &lt;subquery2&gt; | eq_ref | &lt;auto_key&gt;    | &lt;auto_key&gt; | 4       | test.t1.a1 |    1 |   100.00 | NULL        |</span><br><span class="line">|  2 | MATERIALIZED | t2          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line"><span class="comment">-- 表 t2 上的子查询被物化</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="comment">--</span></span><br><span class="line"><span class="comment">-- 表结构同例2</span></span><br><span class="line">mysql &gt;  EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1&lt;100 AND a1 IN (SELECT a2 FROM t2 WHERE t2.a2 &gt;10);</span><br><span class="line">+<span class="comment">----+-------------+-------+--------+---------------+---------+---------+----------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type   | possible_keys | key     | key_len | ref      | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+--------+---------------+---------+---------+----------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE      | t1    | range  | PRIMARY       | PRIMARY | 4       | NULL     |   88 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE      | t2    | eq_ref | PRIMARY       | PRIMARY | 4       | op.t1.a1 |    1 |   100.00 | Using index |</span><br><span class="line">+<span class="comment">----+-------------+-------+--------+---------------+---------+---------+----------+------+----------+-------------+</span></span><br><span class="line"><span class="comment">-- 子查询不存在，SQL语句被转换为内连接操作，</span></span><br><span class="line"><span class="comment">-- 这表明MySQL只有在针对主键列进行类似的子查询时，</span></span><br><span class="line"><span class="comment">-- 才把子查询上拉为内连接。</span></span><br><span class="line"><span class="comment">-- 所以，MySQL还是支持子查询展开技术的。</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>聚集子查询消除技术,不支持<br>例5：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 表结构同例2</span></span><br><span class="line">mysql &gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1&gt;(SELECT MIN(t2.a2) FROM t2);</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br><span class="line">| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                        |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | range | PRIMARY       | PRIMARY | 4       | NULL | 5000 |   100.00 | Using where                  |</span><br><span class="line">|  2 | SUBQUERY    | NULL  | NULL  | NULL          | NULL    | NULL    | NULL | NULL |     NULL | <span class="keyword">Select</span> <span class="keyword">tables</span> optimized away |</span><br><span class="line">+<span class="comment">----+-------------+-------+-------+---------------+---------+---------+------+------+----------+------------------------------+</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="MySQL支持对哪些类型的子查询进行优化"><a href="#MySQL支持对哪些类型的子查询进行优化" class="headerlink" title="MySQL支持对哪些类型的子查询进行优化 ?"></a>MySQL支持对哪些类型的子查询进行优化 ?</h2><ul>
+<li><p>MySQL 不支持对 EXISTS 类型的子查询做进一步的优化<br>例6：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt;  EXPLAIN EXTENDED SELECT * FROM t1 WHERE EXISTS (SELECT 1 FROM t2 WHERE t1.a1 = t2.a2 and t2.a2 &gt; 10 ) ;</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type        | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY            | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 不支持对 NOT EXISTS 类型的子查询做进一步的优化<br>例7：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt;  EXPLAIN EXTENDED SELECT * FROM t1 WHERE NOT EXISTS (SELECT 1 FROM t2 WHERE t1.a1 = t2.a2 and t2.a2 &gt; 10 ) ;</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type        | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY            | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对 IN 类型的子查询的优化<br>例8（非相关子查询）：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1 IN ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">| id | select_type  | table       | type   | possible_keys | key        | key_len | ref        | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE       | t1          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE       | &lt;subquery2&gt; | eq_ref | &lt;auto_key&gt;    | &lt;auto_key&gt; | 4       | test.t1.a1 |    1 |   100.00 | NULL        |</span><br><span class="line">|  2 | MATERIALIZED | t2          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line"><span class="comment">-- 对t2 表进行了物化， 之后进行了半连接优化</span></span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> semi <span class="keyword">join</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="keyword">where</span> ((<span class="string">`&lt;subquery2&gt;`</span>.<span class="string">`a2`</span> = <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))</span><br><span class="line"><span class="comment">-- 进行了物化后，消除了子查询，进行了半连接优化</span></span><br></pre></td></tr></table></figure>
+<p>例9（相关子查询）：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1 IN ( SELECT a2 FROM t2 WHERE t1.a1=10) ;</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+--------------------------------------------------------------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                                              |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+--------------------------------------------------------------------+</span></span><br><span class="line">|  1 | SIMPLE      | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where                                                        |</span><br><span class="line">|  1 | SIMPLE      | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where; FirstMatch(t1); Using join buffer (Block Nested Loop) |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+--------------------------------------------------------------------+</span></span><br><span class="line"><span class="comment">-- select_type 为  SIMPLE 说明消除了子查询</span></span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1276</span></span><br><span class="line">Message: <span class="keyword">Field</span> <span class="keyword">or</span> <span class="keyword">reference</span> <span class="string">'test.t1.a1'</span> <span class="keyword">of</span> <span class="keyword">SELECT</span> #<span class="number">2</span> was resolved <span class="keyword">in</span> <span class="keyword">SELECT</span> #<span class="number">1</span></span><br><span class="line">*************************** <span class="number">2.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> semi <span class="keyword">join</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> = <span class="number">10</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> = <span class="number">10</span>))</span><br><span class="line"><span class="comment">-- IN 子查询被优化为半连接</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对 NOT IN 类型的子查询的优化<br>例10（NOT IN 非相关子查询）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1 NOT IN ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> (<span class="keyword">not</span>(&lt;in_optimizer&gt;(<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">in</span> ( &lt;materialize&gt; (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>) ), &lt;primary_index_lookup&gt;(<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">in</span> &lt;<span class="keyword">temporary</span> <span class="keyword">table</span>&gt; <span class="keyword">on</span> &lt;auto_key&gt; <span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> = <span class="string">`materialized-subquery`</span>.<span class="string">`a2`</span>)))))))</span><br><span class="line"><span class="comment">-- NOT IN 子查询被物化，但没有消除子查询</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对 ALL 类型的子查询的优化<br>例11（<code>&gt;</code>ALL 非相关子查询）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1 &gt; ALL ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt;  <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;<span class="keyword">not</span>&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt;= (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">max</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- ALL 子查询被转换为MAX 运算，但是子查询没有被消除</span></span><br></pre></td></tr></table></figure>
+<p>例12（=ALL 非相关子查询）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1 = ALL ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type        | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY            | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql &gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;<span class="keyword">not</span>&gt;(&lt;in_optimizer&gt;(<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>,&lt;<span class="keyword">exists</span>&gt;(<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> ((<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>) <span class="keyword">and</span> (&lt;<span class="keyword">cache</span>&gt;(<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>) &lt;&gt; <span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>)))))</span><br><span class="line"><span class="comment">-- ALL 优化为了 EXISTS</span></span><br></pre></td></tr></table></figure>
+<p>例13（<code>&lt;</code>ALL 非相关子查询）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  &lt; ALL ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql &gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;<span class="keyword">not</span>&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &gt;= (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">min</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="comment">-- &lt;ALL 被优化为了 &gt;MIN</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对 SOME 类型的子查询的优化<br>例14（<code>&gt;</code>SOME）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  &gt; SOME ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;nop&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &gt; (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">min</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="comment">-- &gt;SOME 子查询被转换为 &gt;MIN</span></span><br></pre></td></tr></table></figure>
+<p>例15（=SOME）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  = SOME ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">| id | select_type  | table       | type   | possible_keys | key        | key_len | ref        | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE       | t1          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE       | &lt;subquery2&gt; | eq_ref | &lt;auto_key&gt;    | &lt;auto_key&gt; | 4       | test.t1.a1 |    1 |   100.00 | NULL        |</span><br><span class="line">|  2 | MATERIALIZED | t2          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> semi <span class="keyword">join</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="keyword">where</span> ((<span class="string">`&lt;subquery2&gt;`</span>.<span class="string">`a2`</span> = <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))</span><br><span class="line"><span class="comment">-- 进行了物化和半连接，消除了子查询</span></span><br></pre></td></tr></table></figure>
+<p>例16（<code>&lt;</code>SOME）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  &lt; SOME ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;nop&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">max</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="comment">-- &lt;SOME 被优化成了 &lt;MAX</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对 ANY 类型的子查询的优化<br>例17（&gt;ANY）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  &gt; ANY ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;nop&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &gt; (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">min</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="comment">-- &gt;ANY  被优化为 &gt;MIN</span></span><br></pre></td></tr></table></figure>
+<p>例18（=ANY）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  = ANY ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">| id | select_type  | table       | type   | possible_keys | key        | key_len | ref        | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">|  1 | SIMPLE       | t1          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">|  1 | SIMPLE       | &lt;subquery2&gt; | eq_ref | &lt;auto_key&gt;    | &lt;auto_key&gt; | 4       | test.t1.a1 |    1 |   100.00 | NULL        |</span><br><span class="line">|  2 | MATERIALIZED | t2          | ALL    | NULL          | NULL       | NULL    | NULL       | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+--------------+-------------+--------+---------------+------------+---------+------------+------+----------+-------------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> semi <span class="keyword">join</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>) <span class="keyword">where</span> ((<span class="string">`&lt;subquery2&gt;`</span>.<span class="string">`a2`</span> = <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span>) <span class="keyword">and</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))</span><br><span class="line"><span class="comment">-- =ANY 物化后通过半连接 消除了子查询</span></span><br></pre></td></tr></table></figure>
+<p>例19（<code>&lt;</code>ANY）:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">表结构同例1</span><br><span class="line">mysql&gt; EXPLAIN EXTENDED SELECT * FROM t1 WHERE t1.a1  &lt; ANY ( SELECT a2 FROM t2 WHERE t2.a2 &gt; 10 );</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">|  1 | PRIMARY     | t1    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">|  2 | SUBQUERY    | t2    | ALL  | NULL          | NULL | NULL    | NULL | 9716 |   100.00 | Using where |</span><br><span class="line">+<span class="comment">----+-------------+-------+------+---------------+------+---------+------+------+----------+-------------+</span></span><br><span class="line">2 rows in <span class="keyword">set</span>, <span class="number">1</span> <span class="keyword">warning</span> (<span class="number">0.00</span> sec)</span><br><span class="line"><span class="comment">-- 优化器处理后的语句为：</span></span><br><span class="line">mysql&gt; <span class="keyword">show</span> <span class="keyword">warnings</span> \G</span><br><span class="line">*************************** <span class="number">1.</span> <span class="keyword">row</span> ***************************</span><br><span class="line">  <span class="keyword">Level</span>: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> <span class="keyword">AS</span> <span class="string">`a1`</span>,<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`b1`</span> <span class="keyword">AS</span> <span class="string">`b1`</span> <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t1`</span> <span class="keyword">where</span> &lt;nop&gt;((<span class="string">`test`</span>.<span class="string">`t1`</span>.<span class="string">`a1`</span> &lt; (<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="keyword">max</span>(<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span>) <span class="keyword">from</span> <span class="string">`test`</span>.<span class="string">`t2`</span> <span class="keyword">where</span> (<span class="string">`test`</span>.<span class="string">`t2`</span>.<span class="string">`a2`</span> &gt; <span class="number">10</span>))))</span><br><span class="line"><span class="comment">-- &lt;ANY 被优化为 &lt;MAX</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="MySQL子查询总结"><a href="#MySQL子查询总结" class="headerlink" title="MySQL子查询总结"></a>MySQL子查询总结</h2><p>MySQL 支持对简单 SELECT 子查询的优化，<br>不支持对 EXISTS 和 NOT EXISTS 的只查询优化，<br>但是对 IN, ALL, SOME, ANY 谓词支持一定的优化。</p>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op4.html" data-title="MySQL优化 -- 4 子查询的优化（二） | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op5.html" title="MySQL优化 -- 5 视图重写与等价谓词重写">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 5 视图重写与等价谓词重写</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/optimization/op3.html" title="MySQL优化 -- 3 子查询的优化（一）">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 3 子查询的优化（一）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op4.html" data-title="MySQL优化 -- 4 子查询的优化（二）" data-url="http://mydba.xyz/mysql/optimization/op4.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#子查询的优化（二）"><span class="toc-text">子查询的优化（二）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL可以优化什么格式的子查询？"><span class="toc-text">MySQL可以优化什么格式的子查询？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL支持哪些子查询的优化技术-？"><span class="toc-text">MySQL支持哪些子查询的优化技术 ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL支持对哪些类型的子查询进行优化"><span class="toc-text">MySQL支持对哪些类型的子查询进行优化 ?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL子查询总结"><span class="toc-text">MySQL子查询总结</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

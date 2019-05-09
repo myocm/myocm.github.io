@@ -1,0 +1,523 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL慢日志分析 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL慢日志分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL慢日志分析">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql23.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL慢日志分析">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2016-11-03T02:54:39.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL慢日志分析">
+<meta name="twitter:description" content="MySQL慢日志分析">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql23.html" title="MySQL慢日志分析" itemprop="url">MySQL慢日志分析</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-11-03T02:54:39.000Z" itemprop="datePublished"> 发表于 2016-11-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL慢日志分析"><span class="toc-text">MySQL慢日志分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#通过MySQL-Processlist定位慢查询"><span class="toc-text">通过MySQL Processlist定位慢查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL-Slowlog-使用与介绍"><span class="toc-text">MySQL Slowlog 使用与介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用pt-query-digest分析慢查询"><span class="toc-text">使用pt-query-digest分析慢查询</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="MySQL慢日志分析"><a href="#MySQL慢日志分析" class="headerlink" title="MySQL慢日志分析"></a>MySQL慢日志分析</h1><h2 id="通过MySQL-Processlist定位慢查询"><a href="#通过MySQL-Processlist定位慢查询" class="headerlink" title="通过MySQL Processlist定位慢查询"></a>通过MySQL Processlist定位慢查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">processlist</span> ;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">full</span> <span class="keyword">processlist</span> ; <span class="comment">-- 打印全部sql语句</span></span><br></pre></td></tr></table></figure>
+<h2 id="MySQL-Slowlog-使用与介绍"><a href="#MySQL-Slowlog-使用与介绍" class="headerlink" title="MySQL Slowlog 使用与介绍"></a>MySQL Slowlog 使用与介绍</h2><ul>
+<li><p>slowlog设置</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span> <span class="keyword">global</span> slow_query_log=<span class="keyword">ON</span>/<span class="keyword">OFF</span>; <span class="comment">--打开关闭slowlog</span></span><br><span class="line"><span class="keyword">set</span> <span class="keyword">global</span> long_query_time=<span class="number">1</span>/<span class="number">5</span>/<span class="number">0.2</span>; <span class="comment">--设置慢查询阈值</span></span><br><span class="line"><span class="keyword">set</span> <span class="keyword">global</span> log_output=<span class="string">"FILE"</span>/<span class="string">"TABLE"</span>; <span class="comment">-- 设置慢查询存储位置</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">'slow_query_log_file'</span>; <span class="comment">--查询slowlog文件位置</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> @@slow_query_log,@@long_query_time,@@log_output,@@slow_query_log_file;</span><br><span class="line">+<span class="comment">------------------+-------------------+--------------+--------------------------------------------+</span></span><br><span class="line">| @@slow_query_log | @@long_query_time | @@log_output | @@slow_query_log_file                      |</span><br><span class="line">+<span class="comment">------------------+-------------------+--------------+--------------------------------------------+</span></span><br><span class="line">|                0 |         10.000000 | FILE         | /home/mysql/mysql8/data/archlinux-slow.log |</span><br><span class="line">+<span class="comment">------------------+-------------------+--------------+--------------------------------------------+</span></span><br><span class="line">1 row in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>慢查询表（mysql.slow_log）</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">desc slow_log;</span><br><span class="line">+----------------+---------------------+------+-----+----------------------+--------------------------------+</span><br><span class="line">|<span class="string"> Field          </span>|<span class="string"> Type                </span>|<span class="string"> Null </span>|<span class="string"> Key </span>|<span class="string"> Default              </span>|<span class="string"> Extra                          </span>|</span><br><span class="line">+----------------+---------------------+------+-----+----------------------+--------------------------------+</span><br><span class="line">|<span class="string"> start_time     </span>|<span class="string"> timestamp(6)        </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> CURRENT_TIMESTAMP(6) </span>|<span class="string"> on update CURRENT_TIMESTAMP(6) </span>|</span><br><span class="line">|<span class="string"> user_host      </span>|<span class="string"> mediumtext          </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> query_time     </span>|<span class="string"> time(6)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> lock_time      </span>|<span class="string"> time(6)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> rows_sent      </span>|<span class="string"> int(11)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> rows_examined  </span>|<span class="string"> int(11)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> db             </span>|<span class="string"> varchar(512)        </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> last_insert_id </span>|<span class="string"> int(11)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> insert_id      </span>|<span class="string"> int(11)             </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> server_id      </span>|<span class="string"> int(10) unsigned    </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> sql_text       </span>|<span class="string"> mediumblob          </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">|<span class="string"> thread_id      </span>|<span class="string"> bigint(21) unsigned </span>|<span class="string"> NO   </span>|<span class="string">     </span>|<span class="string"> NULL                 </span>|<span class="string">                                </span>|</span><br><span class="line">+----------------+---------------------+------+-----+----------------------+--------------------------------+</span><br><span class="line">12 rows in set (0.00 sec)</span><br><span class="line"></span><br><span class="line">select <span class="symbol">*</span> from slow_log limit 1 \G</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>慢查询日志</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Time: 2016-11-02T13:19:54.723779Z</span></span><br><span class="line"><span class="comment"># User@Host: root[root] @ localhost []  Id:   106</span></span><br><span class="line"><span class="comment"># Query_time: 211.696652  Lock_time: 0.000000 Rows_sent: 0  Rows_examined: 0</span></span><br><span class="line"><span class="builtin-name">SET</span> <span class="attribute">timestamp</span>=1478092794;</span><br><span class="line">call proc_t1(10000,@a);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="使用pt-query-digest分析慢查询"><a href="#使用pt-query-digest分析慢查询" class="headerlink" title="使用pt-query-digest分析慢查询"></a>使用pt-query-digest分析慢查询</h2><ol>
+<li><p>使用tcpdump抓取mysql协议包</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000<span class="built_in"> port </span>3306 &gt; mysql.tcp.txt</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用pt-query-digest分析包</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">pt-query-digest</span> <span class="selector-tag">--type</span> <span class="selector-tag">tcpdump</span> <span class="selector-tag">--limit</span> 100 <span class="selector-tag">--watch-server</span> 192<span class="selector-class">.168</span><span class="selector-class">.1</span><span class="selector-class">.11</span><span class="selector-pseudo">:3306</span> <span class="selector-tag">mysql</span><span class="selector-class">.tcp</span><span class="selector-class">.txt</span> &gt; <span class="selector-tag">mysql</span><span class="selector-class">.slow</span><span class="selector-class">.sql</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用pt-query-digest分析慢日志</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-<span class="keyword">query</span>-digest --<span class="keyword">type</span> slowlog --<span class="keyword">order</span>-<span class="keyword">by</span> Rows_examined:<span class="keyword">sum</span>/--<span class="keyword">order</span>-<span class="keyword">by</span> Query_time:cnt  /tmp/mysql-slow.<span class="keyword">log</span> &gt; /tmp/slow3306.sql</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>tcpdump 参数含义<ul>
+<li><code>-s</code>  截取报文的长度，0为全部报文，默认为68字节。  </li>
+<li><code>-x</code>  当分析和打印时, tcpdump 会打印每个包的头部数据, 同时会以16进制打印出每个包的数据(但不包括连接层的头部).总共打印的数据大小不会超过整个数据包的大小与snaplen 中的最小值. 必须要注意的是, 如果高层协议数据没有snaplen 这么长,并且数据链路层(比如, Ethernet层)有填充数据, 则这些填充数据也会被打印.</li>
+<li><code>-nn</code>  不转换协议和端口号</li>
+<li><code>-q</code>   快速输入，打印更少的协议信息，从而使输出行更短。</li>
+<li><code>-tttt</code> 在每一dump行，打印一个默认格式的时间戳。</li>
+<li><code>-i</code> any  监听接口</li>
+<li><code>-c</code>  接收到指定数量的数据包后退出</li>
+<li><code>port</code> 监听端口</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql23.html" data-title="MySQL慢日志分析 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql24.html" title="MySQL备份">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL备份</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql22.html" title="MySQL日志系统">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL日志系统
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql23.html" data-title="MySQL慢日志分析" data-url="http://mydba.xyz/mysql/163/mysql23.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL慢日志分析"><span class="toc-text">MySQL慢日志分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#通过MySQL-Processlist定位慢查询"><span class="toc-text">通过MySQL Processlist定位慢查询</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL-Slowlog-使用与介绍"><span class="toc-text">MySQL Slowlog 使用与介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用pt-query-digest分析慢查询"><span class="toc-text">使用pt-query-digest分析慢查询</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

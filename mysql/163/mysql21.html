@@ -1,0 +1,633 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL性能测试 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL性能测试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL性能测试">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql21.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL性能测试">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016103111195853.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031141917966.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031142038603.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031142424884.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031144359270.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031144520508.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031151050504.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031144837322.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016103115085522.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031151833719.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031151901758.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031152312810.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016103115271801.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031153014782.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016103115313357.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161031153159795.png">
+<meta property="og:updated_time" content="2016-10-31T02:57:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL性能测试">
+<meta name="twitter:description" content="MySQL性能测试">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-2016103111195853.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql21.html" title="MySQL性能测试" itemprop="url">MySQL性能测试</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-10-31T02:57:22.000Z" itemprop="datePublished"> 发表于 2016-10-31</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL性能测试"><span class="toc-text">MySQL性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么需要做性能测试"><span class="toc-text">为什么需要做性能测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能测试的分类"><span class="toc-text">性能测试的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#设备层的测试"><span class="toc-text">设备层的测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#业务层的测试"><span class="toc-text">业务层的测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库层的测试"><span class="toc-text">数据库层的测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL测试分类"><span class="toc-text">MySQL测试分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#常见的测试工具"><span class="toc-text">常见的测试工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能测试衡量指标"><span class="toc-text">性能测试衡量指标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sysbench"><span class="toc-text">Sysbench</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#编译Sysbench"><span class="toc-text">编译Sysbench</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sysbench流程"><span class="toc-text">Sysbench流程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Prepare语法"><span class="toc-text">Prepare语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sysbench表结构"><span class="toc-text">Sysbench表结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Run语法"><span class="toc-text">Run语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Cleanup"><span class="toc-text">Cleanup</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#特殊情况"><span class="toc-text">特殊情况</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sysbench输出解读"><span class="toc-text">Sysbench输出解读</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tpcc-mysql"><span class="toc-text">Tpcc-mysql</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#TPCC流程"><span class="toc-text">TPCC流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用tpcc-mysql的步骤"><span class="toc-text">使用tpcc-mysql的步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="MySQL性能测试"><a href="#MySQL性能测试" class="headerlink" title="MySQL性能测试"></a>MySQL性能测试</h1><h2 id="为什么需要做性能测试"><a href="#为什么需要做性能测试" class="headerlink" title="为什么需要做性能测试"></a>为什么需要做性能测试</h2><ul>
+<li>对线上产品缺乏心理预估</li>
+<li>重现线上异常</li>
+<li>规划未来的业务增长</li>
+<li>测试不同硬件软件配置</li>
+</ul>
+<h2 id="性能测试的分类"><a href="#性能测试的分类" class="headerlink" title="性能测试的分类"></a>性能测试的分类</h2><h3 id="设备层的测试"><a href="#设备层的测试" class="headerlink" title="设备层的测试"></a>设备层的测试</h3><ul>
+<li>关注指标<ul>
+<li>服务器、磁盘性能</li>
+<li>磁盘坏块率</li>
+<li>服务器寿命</li>
+</ul>
+</li>
+</ul>
+<h3 id="业务层的测试"><a href="#业务层的测试" class="headerlink" title="业务层的测试"></a>业务层的测试</h3><ul>
+<li>针对业务进行测试</li>
+</ul>
+<h3 id="数据库层的测试"><a href="#数据库层的测试" class="headerlink" title="数据库层的测试"></a>数据库层的测试</h3><ul>
+<li>什么情况下要做MySQL的测试<ul>
+<li>测试不同的MySQL分支版本</li>
+<li>测试不同的MySQL版本</li>
+<li>测试不同的MySQL参数搭配</li>
+</ul>
+</li>
+</ul>
+<h2 id="MySQL测试分类"><a href="#MySQL测试分类" class="headerlink" title="MySQL测试分类"></a>MySQL测试分类</h2><ul>
+<li>CPU Bound</li>
+<li>IO Bound<br><img src="/img/markdown-img-paste-2016103111195853.png" alt=""></li>
+</ul>
+<h2 id="常见的测试工具"><a href="#常见的测试工具" class="headerlink" title="常见的测试工具"></a>常见的测试工具</h2><ul>
+<li>开源的MySQL性能测试工具<ul>
+<li>sysbench</li>
+<li>tpcc-mysql</li>
+<li>mysqlslap</li>
+</ul>
+</li>
+<li>针对业务编写的性能测试工具<ul>
+<li>blogbench</li>
+</ul>
+</li>
+</ul>
+<h2 id="性能测试衡量指标"><a href="#性能测试衡量指标" class="headerlink" title="性能测试衡量指标"></a>性能测试衡量指标</h2><ul>
+<li>服务吞吐量(TPS，QPS)</li>
+<li>服务响应时间</li>
+<li>服务并发性</li>
+</ul>
+<h2 id="Sysbench"><a href="#Sysbench" class="headerlink" title="Sysbench"></a>Sysbench</h2><ul>
+<li>业界较为出名的性能测试工具</li>
+<li>可以测试磁盘、CPU、数据库</li>
+<li>支持多种数据库：Oracle、DB2、MySQL</li>
+<li>需要自己下载编译安装</li>
+<li>建议版本：sysbench0.5以上，当前版本1.0</li>
+<li><a href="https://github.com/akopytov/sysbench" target="_blank" rel="noopener">主页</a></li>
+</ul>
+<h3 id="编译Sysbench"><a href="#编译Sysbench" class="headerlink" title="编译Sysbench"></a>编译Sysbench</h3><ul>
+<li>下载sysbench<ul>
+<li>Git clone <a href="https://github.com/akopytov/sysbench" target="_blank" rel="noopener">https://github.com/akopytov/sysbench</a></li>
+</ul>
+</li>
+<li>编译&amp;安装<ul>
+<li>./autogen.sh</li>
+<li>./configure</li>
+<li>make  </li>
+</ul>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">centos6.5 运行./autogen.sh时，报错libtoolize: command not found</span><br><span class="line">yum <span class="keyword">install</span> libtool*  即可</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">运行./configure <span class="comment">--prefix=/opt/freeware/sysbench  报如下错误</span></span><br><span class="line">configure: <span class="keyword">error</span>: mysql_config executable <span class="keyword">not</span> <span class="keyword">found</span></span><br><span class="line">********************************************************************************</span><br><span class="line"><span class="keyword">ERROR</span>: cannot find MySQL libraries. <span class="keyword">If</span> you want <span class="keyword">to</span> compile <span class="keyword">with</span> MySQL support,</span><br><span class="line">       please <span class="keyword">install</span> the <span class="keyword">package</span> containing MySQL <span class="keyword">client</span> libraries <span class="keyword">and</span> headers.</span><br><span class="line">       <span class="keyword">On</span> Debian-based systems the <span class="keyword">package</span> <span class="keyword">name</span> <span class="keyword">is</span> libmysqlclient-dev.</span><br><span class="line">       <span class="keyword">On</span> RedHat-based systems, it <span class="keyword">is</span> mysql-devel.</span><br><span class="line">       <span class="keyword">If</span> you have those libraries installed <span class="keyword">in</span> non-standard locations,</span><br><span class="line">       you must either specify <span class="keyword">file</span> locations explicitly <span class="keyword">using</span></span><br><span class="line">       <span class="comment">--with-mysql-includes and --with-mysql-libs options, or make sure path to</span></span><br><span class="line">       mysql_config <span class="keyword">is</span> listed <span class="keyword">in</span> your <span class="keyword">PATH</span> environment variable. <span class="keyword">If</span> you want <span class="keyword">to</span></span><br><span class="line">       <span class="keyword">disable</span> MySQL support, <span class="keyword">use</span> <span class="comment">--without-mysql option.</span></span><br><span class="line">********************************************************************************</span><br><span class="line"></span><br><span class="line">yum  <span class="keyword">install</span>  mysql-devel</span><br><span class="line"></span><br><span class="line">安装完成后，运行sysbench 命令，报错</span><br><span class="line">./sysbench: <span class="keyword">error</span> <span class="keyword">while</span> loading <span class="keyword">shared</span> libraries: libmysqlclient.so<span class="number">.21</span>: cannot <span class="keyword">open</span> <span class="keyword">shared</span> <span class="keyword">object</span> <span class="keyword">file</span>: <span class="keyword">No</span> such <span class="keyword">file</span> <span class="keyword">or</span> <span class="keyword">directory</span></span><br><span class="line"></span><br><span class="line">是因为mysql是编译安装，对应的共享对象没有注册</span><br><span class="line">注册共享对象即可：</span><br><span class="line"><span class="number">1.</span> cat /etc/ld.so.conf  ##查看共享库注册目录</span><br><span class="line"><span class="keyword">include</span> ld.so.conf.d<span class="comment">/*.conf</span></span><br><span class="line"><span class="comment">2. cd ld.so.conf.d/</span></span><br><span class="line"><span class="comment">如果有mysql-x86_64.conf则修改，如果没有则创建一个</span></span><br><span class="line"><span class="comment">内容为mysql动态库的连接目录，如：</span></span><br><span class="line"><span class="comment">/usr/lib64/mysql</span></span><br><span class="line"><span class="comment">3. 如果/usr/lib64/mysql目录不存在，则创建目录，</span></span><br><span class="line"><span class="comment">在里面创建动态链接库的软连接，如：</span></span><br><span class="line"><span class="comment">lrwxrwxrwx 1 root root 54 2016-10-31 14:03:54 libmysqlclient.so -&gt; /opt/freeware/mysql-8.0.0/lib/libmysqlclient.so.21.0.0</span></span><br><span class="line"><span class="comment">lrwxrwxrwx 1 root root 54 2016-10-31 14:03:37 libmysqlclient.so.21 -&gt; /opt/freeware/mysql-8.0.0/lib/libmysqlclient.so.21.0.0</span></span><br><span class="line"><span class="comment">4. 运行ldconfig 命令重新载入动态配置，使上述配置生效。</span></span><br></pre></td></tr></table></figure>
+<h3 id="Sysbench流程"><a href="#Sysbench流程" class="headerlink" title="Sysbench流程"></a>Sysbench流程</h3><ul>
+<li>常见做法<br><img src="/img/markdown-img-paste-20161031141917966.png" alt=""></li>
+</ul>
+<h4 id="Prepare语法"><a href="#Prepare语法" class="headerlink" title="Prepare语法"></a>Prepare语法</h4><p><img src="/img/markdown-img-paste-20161031142038603.png" alt=""><br><img src="/img/markdown-img-paste-20161031142424884.png" alt=""><br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./sysbench <span class="attribute">--test</span>=/home/sdy/sysbench/sysbench/sysbench/tests/db/parallel_prepare.lua <span class="attribute">--oltp_tables_count</span>=1 <span class="attribute">--rand-init</span>=on <span class="attribute">--oltp-table-size</span>=10000 <span class="attribute">--mysql-host</span>=127.0.0.1 <span class="attribute">--mysql-port</span>=3306 <span class="attribute">--mysql-user</span>=root <span class="attribute">--mysql-password</span>=root <span class="attribute">--mysql-db</span>=demo <span class="attribute">--max-requests</span>=0 prepare</span><br></pre></td></tr></table></figure></p>
+<h4 id="Sysbench表结构"><a href="#Sysbench表结构" class="headerlink" title="Sysbench表结构"></a>Sysbench表结构</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show create table sbtest1 \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">       Table: sbtest1</span><br><span class="line"><span class="keyword">Create</span> <span class="keyword">Table</span>: <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`sbtest1`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">10</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`k`</span> <span class="built_in">int</span>(<span class="number">10</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0'</span>,</span><br><span class="line">  <span class="string">`c`</span> <span class="built_in">char</span>(<span class="number">120</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span>,</span><br><span class="line">  <span class="string">`pad`</span> <span class="built_in">char</span>(<span class="number">60</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">''</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">  <span class="keyword">KEY</span> <span class="string">`k_1`</span> (<span class="string">`k`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">10001</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4 MAX_ROWS=<span class="number">1000000</span></span><br><span class="line"><span class="number">1</span> <span class="keyword">row</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h4 id="Run语法"><a href="#Run语法" class="headerlink" title="Run语法"></a>Run语法</h4><p><img src="/img/markdown-img-paste-20161031144359270.png" alt=""><br><img src="/img/markdown-img-paste-20161031144520508.png" alt=""><br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./sysbench <span class="attribute">--test</span>=/home/sdy/sysbench/sysbench/sysbench/tests/db/oltp.lua <span class="attribute">--oltp-table-size</span>=10000 <span class="attribute">--oltp_tables_count</span>=1 <span class="attribute">--num-threads</span>=100 <span class="attribute">--oltp-read-only</span>=off <span class="attribute">--report-interval</span>=10 <span class="attribute">--rand-type</span>=uniform <span class="attribute">--mysql-host</span>=127.0.0.1 <span class="attribute">--mysql-port</span>=3306 <span class="attribute">--mysql-user</span>=root <span class="attribute">--mysql-password</span>=root <span class="attribute">--mysql-db</span>=demo <span class="attribute">--max-time</span>=1000 <span class="attribute">--max-requests</span>=0 run</span><br></pre></td></tr></table></figure></p>
+<h4 id="Cleanup"><a href="#Cleanup" class="headerlink" title="Cleanup"></a>Cleanup</h4><ul>
+<li>手动drop掉表和数据库</li>
+<li>使用sysbench提供的cleanup命令<br><img src="/img/markdown-img-paste-20161031151050504.png" alt="">  <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./sysbench <span class="attribute">--test</span>=/home/sdy/sysbench/sysbench/sysbench/tests/db/parallel_prepare.lua <span class="attribute">--oltp_tables_count</span>=1 <span class="attribute">--rand-init</span>=on <span class="attribute">--oltp-table-size</span>=10000 <span class="attribute">--mysql-host</span>=127.0.0.1 <span class="attribute">--mysql-port</span>=3306 <span class="attribute">--mysql-user</span>=root <span class="attribute">--mysql-password</span>=root <span class="attribute">--mysql-db</span>=demo <span class="attribute">--max-requests</span>=0 cleanup</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="特殊情况"><a href="#特殊情况" class="headerlink" title="特殊情况"></a>特殊情况</h4><ul>
+<li>写入测试（纯Insert操作）<br><img src="/img/markdown-img-paste-20161031144837322.png" alt=""></li>
+</ul>
+<h4 id="Sysbench输出解读"><a href="#Sysbench输出解读" class="headerlink" title="Sysbench输出解读"></a>Sysbench输出解读</h4><p><img src="/img/markdown-img-paste-2016103115085522.png" alt=""></p>
+<h2 id="Tpcc-mysql"><a href="#Tpcc-mysql" class="headerlink" title="Tpcc-mysql"></a>Tpcc-mysql</h2><ul>
+<li>TPC-C是专门针对联机交易处理系统(OLTP系统)的规范</li>
+<li>Tpcc-mysql 由percona根据规范实现</li>
+</ul>
+<h3 id="TPCC流程"><a href="#TPCC流程" class="headerlink" title="TPCC流程"></a>TPCC流程</h3><p><img src="/img/markdown-img-paste-20161031151833719.png" alt=""><br><img src="/img/markdown-img-paste-20161031151901758.png" alt=""></p>
+<ul>
+<li>下载tpcc-mysql<ul>
+<li>bzr branch lp:~percona-dev/perconatools/tpcc-mysql</li>
+</ul>
+</li>
+<li><p>编译安装</p>
+<ul>
+<li>cd tpcc-mysql</li>
+<li>make<ul>
+<li>export LD_LIBRARY_PATH=$MYSQL_HOME/lib</li>
+<li>export C_INCLUDE_PATH=$MYSQL_HOME/include</li>
+<li>export PATH=$MYSQL_HOME/bin:$PATH<h3 id="使用tpcc-mysql的步骤"><a href="#使用tpcc-mysql的步骤" class="headerlink" title="使用tpcc-mysql的步骤"></a>使用tpcc-mysql的步骤</h3><img src="/img/markdown-img-paste-20161031152312810.png" alt=""></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>创建表结果<br>手工建库，使用下面的脚本建表和约束。</p>
+<ul>
+<li>create_table.sql</li>
+<li>add_fkey_idx.sql</li>
+</ul>
+</li>
+<li><p>Tpcc-load<br>tpcc-load [server] [DB] [user] [pass] [warehouse]<br><img src="/img/markdown-img-paste-2016103115271801.png" alt=""></p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./tpcc_load <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> tpcc root root <span class="number">1</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Tpcc-start<br>tpcc-start -h server_host -P port -d database_name -u mysql_user -p mysql-password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file<br><img src="/img/markdown-img-paste-20161031153014782.png" alt=""></p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./tpcc_start -h <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> -P <span class="number">3306</span> -d tpcc -u root -p root -w <span class="number">1</span> -c <span class="number">120</span> -r <span class="number">30</span> -l <span class="number">180</span> -i <span class="number">10</span> -f report_file</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Tpcc-mysql输出解读</p>
+<ul>
+<li>运行过程的输出<br><img src="/img/markdown-img-paste-2016103115313357.png" alt=""></li>
+<li>运行结束输出结果<br><img src="/img/markdown-img-paste-20161031153159795.png" alt=""><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">10</span><span class="string">,</span> <span class="number">411</span><span class="string">(2):3.794|8.120,</span> <span class="number">412</span><span class="string">(0):1.193|3.019,</span> <span class="number">41</span><span class="string">(0):0.529|1.412,</span> <span class="number">41</span><span class="string">(0):4.648|6.283,</span> <span class="number">41</span><span class="string">(0):7.640|9.171</span></span><br><span class="line"><span class="comment">###第一列代表时间，秒， 第二列，新增订单执行成功次数（超时次数）：90% 业务的响应时间| 最大响应时间</span></span><br><span class="line">               <span class="string">第三列，支付业务</span></span><br><span class="line">               <span class="string">第四列，订单查询业务</span></span><br><span class="line">                    <span class="string">第五列，物流业务</span></span><br><span class="line">               <span class="string">最后一列，仓储业务</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="string">&lt;Raw</span> <span class="string">Results&gt;</span></span><br><span class="line"> <span class="string">[0]</span> <span class="attr">sc:7202</span>  <span class="attr">lt:9</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span>     <span class="comment">##新增订单   sc  成功次数  lt 超出次数 rt 重试次数  fl 失败次数</span></span><br><span class="line"> <span class="string">[1]</span> <span class="attr">sc:7209</span>  <span class="attr">lt:3</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span>     <span class="comment">##支付业务</span></span><br><span class="line"> <span class="string">[2]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span>      <span class="comment">##订单查询业务</span></span><br><span class="line"> <span class="string">[3]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span>      <span class="comment">##物流业务</span></span><br><span class="line"> <span class="string">[4]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span>      <span class="comment">##仓储业务</span></span><br><span class="line"><span class="string">in</span> <span class="number">180</span> <span class="string">sec.</span></span><br><span class="line"></span><br><span class="line"><span class="string">&lt;Raw</span> <span class="string">Results2(sum</span> <span class="string">ver.)&gt;</span>            <span class="comment">##计算两次，确保计算正确</span></span><br><span class="line"> <span class="string">[0]</span> <span class="attr">sc:7204</span>  <span class="attr">lt:9</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span></span><br><span class="line"> <span class="string">[1]</span> <span class="attr">sc:7209</span>  <span class="attr">lt:3</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span></span><br><span class="line"> <span class="string">[2]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span></span><br><span class="line"> <span class="string">[3]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span></span><br><span class="line"> <span class="string">[4]</span> <span class="attr">sc:721</span>  <span class="attr">lt:0</span>  <span class="attr">rt:0</span>  <span class="attr">fl:0</span></span><br><span class="line"></span><br><span class="line"><span class="string">&lt;Constraint</span> <span class="string">Check&gt;</span> <span class="string">(all</span> <span class="string">must</span> <span class="string">be</span> <span class="string">[OK])</span>   <span class="comment">##测试场景业务覆盖范围要求</span></span><br><span class="line"><span class="string">[transaction</span> <span class="string">percentage]</span></span><br><span class="line"><span class="attr">       Payment:</span> <span class="number">43.48</span><span class="string">%</span> <span class="string">(&gt;=43.0%)</span> <span class="string">[OK]</span></span><br><span class="line"><span class="attr">  Order-Status:</span> <span class="number">4.35</span><span class="string">%</span> <span class="string">(&gt;=</span> <span class="number">4.0</span><span class="string">%)</span> <span class="string">[OK]</span></span><br><span class="line"><span class="attr">      Delivery:</span> <span class="number">4.35</span><span class="string">%</span> <span class="string">(&gt;=</span> <span class="number">4.0</span><span class="string">%)</span> <span class="string">[OK]</span></span><br><span class="line"><span class="attr">   Stock-Level:</span> <span class="number">4.35</span><span class="string">%</span> <span class="string">(&gt;=</span> <span class="number">4.0</span><span class="string">%)</span> <span class="string">[OK]</span></span><br><span class="line"><span class="string">[response</span> <span class="string">time</span> <span class="string">(at</span> <span class="string">least</span> <span class="number">90</span><span class="string">%</span> <span class="string">passed)]</span></span><br><span class="line"><span class="attr">     New-Order:</span> <span class="number">99.88</span><span class="string">%</span>  <span class="string">[OK]</span></span><br><span class="line"><span class="attr">       Payment:</span> <span class="number">99.96</span><span class="string">%</span>  <span class="string">[OK]</span></span><br><span class="line"><span class="attr">  Order-Status:</span> <span class="number">100.00</span><span class="string">%</span>  <span class="string">[OK]</span></span><br><span class="line"><span class="attr">      Delivery:</span> <span class="number">100.00</span><span class="string">%</span>  <span class="string">[OK]</span></span><br><span class="line"><span class="attr">   Stock-Level:</span> <span class="number">100.00</span><span class="string">%</span>  <span class="string">[OK]</span></span><br><span class="line"></span><br><span class="line"><span class="string">&lt;TpmC&gt;</span></span><br><span class="line">   <span class="number">2403.667</span> <span class="string">TpmC</span>      <span class="comment">##每分钟事务数</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>IO Bound 测试数据量要远大于内存、CPU Bound 测试数据量要小于内存</li>
+<li>测试时间建议大于60分钟，减小误差</li>
+<li>Sysbench更倾向于测试MySQL性能、TPCC更接近于业务</li>
+<li>运行测试程序需要同时监控机器负载，MySQL各项监控指标</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql21.html" data-title="MySQL性能测试 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql22.html" title="MySQL日志系统">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL日志系统</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql20.html" title="MySQL容量评估">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL容量评估
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql21.html" data-title="MySQL性能测试" data-url="http://mydba.xyz/mysql/163/mysql21.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL性能测试"><span class="toc-text">MySQL性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么需要做性能测试"><span class="toc-text">为什么需要做性能测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能测试的分类"><span class="toc-text">性能测试的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#设备层的测试"><span class="toc-text">设备层的测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#业务层的测试"><span class="toc-text">业务层的测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库层的测试"><span class="toc-text">数据库层的测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL测试分类"><span class="toc-text">MySQL测试分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#常见的测试工具"><span class="toc-text">常见的测试工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能测试衡量指标"><span class="toc-text">性能测试衡量指标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sysbench"><span class="toc-text">Sysbench</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#编译Sysbench"><span class="toc-text">编译Sysbench</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sysbench流程"><span class="toc-text">Sysbench流程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Prepare语法"><span class="toc-text">Prepare语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sysbench表结构"><span class="toc-text">Sysbench表结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Run语法"><span class="toc-text">Run语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Cleanup"><span class="toc-text">Cleanup</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#特殊情况"><span class="toc-text">特殊情况</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sysbench输出解读"><span class="toc-text">Sysbench输出解读</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tpcc-mysql"><span class="toc-text">Tpcc-mysql</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#TPCC流程"><span class="toc-text">TPCC流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用tpcc-mysql的步骤"><span class="toc-text">使用tpcc-mysql的步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

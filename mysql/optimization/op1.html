@@ -1,0 +1,611 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 1 数据库与关系代数 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 1 数据库与关系代数">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op1.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161227143544896.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016122714422483.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161227144451523.png">
+<meta property="og:updated_time" content="2016-12-27T03:39:48.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 1 数据库与关系代数">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20161227143544896.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op1.html" title="MySQL优化 -- 1 数据库与关系代数" itemprop="url">MySQL优化 -- 1 数据库与关系代数</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-12-27T03:39:48.000Z" itemprop="datePublished"> 发表于 2016-12-27</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#数据库与关系代数"><span class="toc-text">数据库与关系代数</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-RDBMS-？"><span class="toc-text">What is the RDBMS ？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-the-Database-Management-System-？"><span class="toc-text">What is the Database Management System ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-the-Relation-Database-Management-System-？"><span class="toc-text">What  is the Relation Database Management System ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-do-we-need-to-learn-MySQL-PostgreSQL-？"><span class="toc-text">Why do we need to learn MySQL/PostgreSQL ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-do-we-need-to-master-Query-Optimization-Technology-？"><span class="toc-text">Why do we need to master Query Optimization Technology ？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-relational-algebra-？"><span class="toc-text">What  is the relational algebra ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-technology-Of-Query-Optimization-？"><span class="toc-text">What is the technology Of Query Optimization ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Query-Optimization-Of-MySQL-？"><span class="toc-text">What is the Query Optimization Of MySQL ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-learn-and-master-it？"><span class="toc-text">How to learn and master it？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-database-optimization？"><span class="toc-text">What is database optimization？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优-Database-Tuning"><span class="toc-text">数据库调优/Database Tuning</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优的方式"><span class="toc-text">数据库调优的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优主要分为五个阶段"><span class="toc-text">数据库调优主要分为五个阶段</span></a></li></ol></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="数据库与关系代数"><a href="#数据库与关系代数" class="headerlink" title="数据库与关系代数"></a>数据库与关系代数</h1><p>The Query Optimization Technique Of MySQL(5.6.X)<br>1 Database and Relational Algebra</p>
+<h2 id="What-is-the-RDBMS-？"><a href="#What-is-the-RDBMS-？" class="headerlink" title="What is the RDBMS ？"></a>What is the RDBMS ？</h2><h3 id="What-is-the-Database-Management-System-？"><a href="#What-is-the-Database-Management-System-？" class="headerlink" title="What is the Database Management System ？"></a>What is the Database Management System ？</h3><p>数据库管理系统(Database Management System)：  </p>
+<ol>
+<li>是一种操纵和管理数据的大型软件，用于建立、使用和维护数据，简称DBMS。</li>
+<li>它对数据进行统一的管理和控制，以保证数据的安全性和完整性。</li>
+<li>用户通过DBMS访问数据库中的数据，数据库管理员也通过DBMS进行数据库的维护工作。</li>
+<li>它可使多个应用程序和用户用不同的方法在同时或不同时刻去建立，修改和询问数据。</li>
+<li>DBMS提供数据定义语言DDL（Data Definition Language）和数据操作语言DML（Data Manipulation Language），供用户定义数据库的模式结构与权限约束，实现对数据的追加、删除等操作。</li>
+</ol>
+<p>只要做数据处理，软件规模达到一定程度，似乎都称为了数据库。</p>
+<p>如：HBase/MongoDB等等</p>
+<p>衡量是否是数据库的标准：<br>ACID，是指在数据库管理系统（DBMS）中事务所具有的四个特性：<br>1）原子性（Atomicity）<br>2）一致性（Consistency）<br>3）隔离性（Isolation）<br>4）持久性（Durability）  </p>
+<p>+技术的复杂性</p>
+<h3 id="What-is-the-Relation-Database-Management-System-？"><a href="#What-is-the-Relation-Database-Management-System-？" class="headerlink" title="What  is the Relation Database Management System ？"></a>What  is the Relation Database Management System ？</h3><p>历史上的几种类型的数据库：</p>
+<p>1 层次型<br>2 网状型<br>3 关系型  </p>
+<p><strong>关系数据库</strong>，是建立在关系数据库模型基础上的数据库，借助于关系代数等概念和方法来处理数据库中的数据，同时也是一个被组织成一组拥有正式描述性的表格，该形式的表格作用的实质是装载着数据项的特殊收集体，这些表格中的数据能以许多不同的方式被存取或重新召集而不需要重新组织数据库表格。</p>
+<p>MySQL，PostgreSQL，oracle，SQL server，DB2 都是关系型数据库。</p>
+<h3 id="Why-do-we-need-to-learn-MySQL-PostgreSQL-？"><a href="#Why-do-we-need-to-learn-MySQL-PostgreSQL-？" class="headerlink" title="Why do we need to learn MySQL/PostgreSQL ？"></a>Why do we need to learn MySQL/PostgreSQL ？</h3><p>趋势1：云计算，淘汰大部分的运维人员</p>
+<p>趋势2：云数据库，淘汰大部分以商业数据库为职业的DBA</p>
+<p>趋势3：电商等兴起，对开源数据库技术的人员需求增多</p>
+<p>趋势4：去IOE化等运动背后的商业成本和安全问题，促进开源产业发展</p>
+<p>趋势5：MySQL和PostgreSQL为代表的开源数据库自身正蓬勃发展中</p>
+<h3 id="Why-do-we-need-to-master-Query-Optimization-Technology-？"><a href="#Why-do-we-need-to-master-Query-Optimization-Technology-？" class="headerlink" title="Why do we need to master Query Optimization Technology ？"></a>Why do we need to master Query Optimization Technology ？</h3><blockquote>
+<p>数据库查询优化技术一直是DBMS实现技术中的精华，也是难点和重点。<br>王珊<br>中国人民大学信息学院教授|博士生导师</p>
+</blockquote>
+<p>从数据处理的角度看：<br>数据库的OLAP型应用要多于OLTP型应用。<br>大数据技术目前处理了一部分非结构化的数据，但分布式数据库技术的发展，将使得数据库技术进一步发展甚至出现革命性的进步进而与现行的hadoop/spark等技术争夺数据分析的阵地。<br>而查询优化技术因此二者得益继续发展。</p>
+<p>从当下技术发展的趋势看：<br>大数据背景下，盛行几十年的SQL查询技术焕发了新的生机，不仅在数据库中占有半壁江山，而且在大数据处理技术下，各种SQL查询接口/功能层异军突起。<br>而查询优化技术因具有普适性得以继续使用。</p>
+<h2 id="What-is-the-relational-algebra-？"><a href="#What-is-the-relational-algebra-？" class="headerlink" title="What  is the relational algebra ？"></a>What  is the relational algebra ？</h2><p><strong>数学中</strong>，关系代数是支持叫做逆反(converse)的对合一元运算的剩余布尔代数。激发关系代数的例子是在集合 X 上的所有二元关系的代数 ，带有 R·S 被解释为平常的二元关系复合。</p>
+<p>关系代数的早期形式形成于十九世纪德·摩根、皮尔士和 Ernst Schröder 的工作。</p>
+<p>它今日的纯等式形式是阿尔弗雷德·塔斯基和他的学生在 1940 年代开发的。</p>
+<p><strong>数据库中</strong>，关系代数是一阶逻辑的分支，是<strong>闭合于运算下</strong>的<strong>关系</strong>的集合。运算作用于一个或多个关系上来生成一个关系。关系代数是计算机科学的一部分。</p>
+<p>在纯数学中的关系代数是有关于数理逻辑和集合论的代数结构。</p>
+<p><strong>SQL</strong> 的查询语言松散的基于了关系代数，由于SQL中的操作数（表）不完全是关系，因此很多有用的关于关系代数的理论在SQL对应者中不成立。</p>
+<p>1970年E.F. Codd发表了数据的关系模型论文。Codd提议这样一种代数作为数据库查询语言的基础，称为关系代数。</p>
+<p>Codd的关系代数的六个原始运算是“选择”、“投影”、笛卡尔积（也叫做“叉积”或“交叉连接”）、并集、差集和“重命名”。（实际上，Codd忽略了重命名，而ISBL的发明者显著的包括了它）。这六个运算在省略其中任何一个都要损失表达能力的意义上是基本的。已经依据这六个原始运算定义了很多其他运算。其中最重要的是交集、除法和自然连接。</p>
+<p>事实上ISBL显著的用自然连接替代了笛卡尔积，它是笛卡尔积的退化情况。</p>
+<p>第一个基于Codd的代数的查询语言是ISBL，许多作者都认同这个先驱的工作展示了一个使Codd的想法成为有用语言的方式</p>
+<p><strong>关系代数</strong> 是一种抽象的查询语言，用对关系的运算来表达查询，作为研究关系数据语言的数学工具。</p>
+<p>关系代数的运算对象是关系，运算结果亦为关系。关系代数用到的运算符包括四类：<br>1）集合运算符<br>2）专门的关系运算符<br>3）算术比较符<br>4）逻辑运算符  </p>
+<p>比较运算符和逻辑运算符是用来辅助专门的关系运算符进行操作的，所以按照运算符的不同，主要将关系代数分为传统的集合运算和专门的关系运算两类。</p>
+<h2 id="What-is-the-technology-Of-Query-Optimization-？"><a href="#What-is-the-technology-Of-Query-Optimization-？" class="headerlink" title="What is the technology Of Query Optimization ？"></a>What is the technology Of Query Optimization ？</h2><p>数据库查询优化技术主要包括查询重用技术、查询重写规则、查询算法优化技术、并行查询优化技术、分布式查询优化技术及其他方面（如框架结构）的优化技术，这6项技术构成了一个“广义的数据库查询优化”的概念。</p>
+<p>“查询重写规则”和“查询算法优化”是很多书籍在提及”数据库查询优化“时所限定的范围，这两项技术称为”狭义的数据库查询优化“。从优化的内容角度看，查询优化又分为<strong>代数优化</strong>和<strong>非代数优化</strong>，或称为<strong>逻辑优化</strong>和<strong>物理优化</strong>。<br>逻辑优化主要依据关系代数的等价变换做一些逻辑变换。<br>物理优化主要根据数据读取、表连接方式、表连接顺序、排序等技术对查询进行优化。<br>”查询重写规则“属于逻辑优化方式，运用了关系代数和启发式规则；<br>”查询算法优化“属于物理优化方式，运用了基于代价估算的多表连接算法求解最小花费的技术。  </p>
+<ol>
+<li><strong>Query reuse</strong>   <ol>
+<li>The query result reuse  </li>
+<li>The query plan reuse  </li>
+</ol>
+</li>
+<li><strong>The Rule Of Query Rewrite</strong>  <ol>
+<li>Based on Relational Algebra and Heuristic Rule</li>
+<li>View Rewrite、Sub-query Optimization、Equivalent Predicate Rewrite、Condition Simplification、Outer Join Elimination、Join Elimination、Nest Join Elimination</li>
+<li>Sematic Optimization</li>
+</ol>
+</li>
+<li><strong>The Algorithm Of Query Optimization</strong><ol>
+<li>Single Table Scan Algorithm</li>
+<li>Two Table Join Algorithm</li>
+<li>Multi-table Join Algorithm</li>
+</ol>
+</li>
+<li><strong>Parallel Query Optimization</strong></li>
+<li><strong>Distribute Query Optimization</strong></li>
+</ol>
+<h2 id="What-is-the-Query-Optimization-Of-MySQL-？"><a href="#What-is-the-Query-Optimization-Of-MySQL-？" class="headerlink" title="What is the Query Optimization Of MySQL ？"></a>What is the Query Optimization Of MySQL ？</h2><p><img src="/img/markdown-img-paste-20161227143544896.png" alt=""></p>
+<h2 id="How-to-learn-and-master-it？"><a href="#How-to-learn-and-master-it？" class="headerlink" title="How to learn and master it？"></a>How to learn and master it？</h2><p>修习心法</p>
+<ol>
+<li><p>读书而明理</p>
+</li>
+<li><p>听讲而释疑</p>
+</li>
+<li><p>练习而掌握</p>
+</li>
+<li><p>实践中巧遇大造化</p>
+</li>
+<li><p>再：读书/听讲/交流/思考/实践……</p>
+</li>
+</ol>
+<p><img src="/img/markdown-img-paste-2016122714422483.png" alt=""></p>
+<h2 id="What-is-database-optimization？"><a href="#What-is-database-optimization？" class="headerlink" title="What is database optimization？"></a>What is database optimization？</h2><h3 id="数据库调优-Database-Tuning"><a href="#数据库调优-Database-Tuning" class="headerlink" title="数据库调优/Database Tuning"></a>数据库调优/Database Tuning</h3><p>数据库调优可以使数据库应用运行得更快，其目标是：</p>
+<p>使数据库<br>  有更高的吞吐量<br>  更短的响应时间  </p>
+<p>被调优的对象是整个数据库管理系统总体。</p>
+<h3 id="数据库调优的方式"><a href="#数据库调优的方式" class="headerlink" title="数据库调优的方式"></a>数据库调优的方式</h3><p>1）人工调优。<br>  主要依赖于人，效率低下；要求操作者完全理解常识所依赖的原理，还需要对应用、数据库管理系统、操作系统以及硬件有广泛而深刻的理解。</p>
+<p>2）基于案例的调优。<br>  总结典型应用案例情况中数据库参数的推荐配置值、数据逻辑层设计等情况，从而为用户的调优工作提供一定的参考和借鉴。但这种方式忽略了系统的动态性和不同系统间存在的差异。</p>
+<p>3）自调优。<br>  为数据库系统建立一个模型，根据“影响数据库系统性能效率的因素”，数据库系统自动进行参数的配置。一些商业数据库，实现了部分自调优技术。</p>
+<h3 id="数据库调优主要分为五个阶段"><a href="#数据库调优主要分为五个阶段" class="headerlink" title="数据库调优主要分为五个阶段"></a>数据库调优主要分为五个阶段</h3><p><img src="/img/markdown-img-paste-20161227144451523.png" alt=""></p>
+<p>数据库调优五个阶段的主要技术   </p>
+<ol>
+<li><p>应用情况的估算。<br>应用的使用方式（把业务逻辑转换为数据库的读写分布逻辑，以是读多写少还是读写均衡等来区分OLTP和OLAP；应用对数据库的并发情况、并发是否可以池化等）、数据量、对数据库的压力、峰值压力等做一个预估。</p>
+</li>
+<li><p>系统选型策略。<br>确定什么样的数据库可以适用应用需求，并确定数据库是使用开源的还是商业的，是使用集群还是单机的系统，同时对操作系统、中间件、硬件、网络等进行选型。</p>
+</li>
+<li><p>数据模型的设计。<br>主要是根据业务逻辑，从几个角度考虑表的逻辑结构，内容如下：</p>
+<ol>
+<li><p>E-R模型设计：遵循E-R模型设计原理。偶尔的适当程度的非规范化可以改善系统查询性能。</p>
+</li>
+<li><p>数据逻辑分布策略：目的是减少数据请求的不必要的数据量，把用户需要的数据返回；可用的技术如分区、用E-R模型分表等（如互联网企业典型的用法，根据业务的不同，进行分库、分表等操作）。</p>
+</li>
+<li><p>数据物理存储策略：目的是减少IO，如启用压缩技术、把索引和表数据的存储分开，不同的表数据分布于不同的表空间，不同表空间分布在不同的物理存储上（尤其是读写量大的表空间分布在不同的物理存储上）、日志、索引和数据分布在不同的物理存储上等。</p>
+</li>
+<li><p>索引：在查询频繁的对象上建立合适的索引，使索引的正效应大于负效应（索引的维护存在消耗）。</p>
+</li>
+</ol>
+</li>
+<li><p>SQL设计。<br>编写正确的、查询效率高的SQL语句。这依据的主要是“查询重写规则”，编写语句的过程中要注意，要有意识地保障SQL能利用到索引。</p>
+</li>
+<li><p>数据库功能的启用。<br>数据库为提高性能提供了一些功能，可合理使用，具体如下：</p>
+<ol>
+<li>查询重用：根据实际情况进行配置，可缓存查询执行计划、查询结果等。</li>
+<li>数据库参数的设置：可设置合适的参数如数据缓冲区等。<br>模型系统预运行。在备用系统上模拟实际运行环境，加大压力进行系统测试，提前发现问题。</li>
+</ol>
+</li>
+<li><p>系统监控与分析。<br>在工业环境下，加强对系统的运行监控和日常的分析工作，具体如下：</p>
+<ol>
+<li>应用系统表现：收集用户对应用系统的使用意见、系统存在问题等，因为这些可能是用户在第一时间发现的。</li>
+<li>OS环境监控：实时监控CPU、内存、IO等，并对比实时情况与历史正常情况。</li>
+<li>数据库内部状况监控：一些数据库提供系统表、视图、工具等手段，向用户提供数据库运行过程中内部状况的信息，如锁的情况，这些都需要实时监控，并对比实时情况与历史正常情况。</li>
+<li>日志分析：在数据库的日志、操作系统的日志中找出异常事件，定位问题。</li>
+</ol>
+</li>
+</ol>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op1.html" data-title="MySQL优化 -- 1 数据库与关系代数 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op2.html" title="MySQL优化 -- 2 数据库查询优化技术总揽">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 2 数据库查询优化技术总揽</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql33.html" title="MySQL5.7新特性">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL5.7新特性
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op1.html" data-title="MySQL优化 -- 1 数据库与关系代数" data-url="http://mydba.xyz/mysql/optimization/op1.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#数据库与关系代数"><span class="toc-text">数据库与关系代数</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-RDBMS-？"><span class="toc-text">What is the RDBMS ？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-the-Database-Management-System-？"><span class="toc-text">What is the Database Management System ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-the-Relation-Database-Management-System-？"><span class="toc-text">What  is the Relation Database Management System ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-do-we-need-to-learn-MySQL-PostgreSQL-？"><span class="toc-text">Why do we need to learn MySQL/PostgreSQL ？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-do-we-need-to-master-Query-Optimization-Technology-？"><span class="toc-text">Why do we need to master Query Optimization Technology ？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-relational-algebra-？"><span class="toc-text">What  is the relational algebra ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-technology-Of-Query-Optimization-？"><span class="toc-text">What is the technology Of Query Optimization ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-Query-Optimization-Of-MySQL-？"><span class="toc-text">What is the Query Optimization Of MySQL ？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-learn-and-master-it？"><span class="toc-text">How to learn and master it？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-database-optimization？"><span class="toc-text">What is database optimization？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优-Database-Tuning"><span class="toc-text">数据库调优/Database Tuning</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优的方式"><span class="toc-text">数据库调优的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据库调优主要分为五个阶段"><span class="toc-text">数据库调优主要分为五个阶段</span></a></li></ol></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

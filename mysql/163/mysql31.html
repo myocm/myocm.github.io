@@ -1,0 +1,551 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL读写分离 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL读写分离">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL读写分离">
+<meta property="og:url" content="http://mydba.xyz/mysql/163/mysql31.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL读写分离">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110150550728.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161053462.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161226636.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161319923.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161420860.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161450249.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161526576.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110161728463.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110175403769.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-20161110180125249.png">
+<meta property="og:image" content="http://mydba.xyz/img/markdown-img-paste-2016111018245511.png">
+<meta property="og:updated_time" content="2016-11-10T07:01:53.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL读写分离">
+<meta name="twitter:description" content="MySQL读写分离">
+<meta name="twitter:image" content="http://mydba.xyz/img/markdown-img-paste-20161110150550728.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/163/mysql31.html" title="MySQL读写分离" itemprop="url">MySQL读写分离</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-11-10T07:01:53.000Z" itemprop="datePublished"> 发表于 2016-11-10</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL读写分离"><span class="toc-text">MySQL读写分离</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL读写分离概述"><span class="toc-text">MySQL读写分离概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-What"><span class="toc-text">读写分离 - What</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-Why"><span class="toc-text">读写分离 - Why</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-How"><span class="toc-text">读写分离 - How</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离主要问题"><span class="toc-text">读写分离主要问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#读写分离常见方案"><span class="toc-text">读写分离常见方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Proxy"><span class="toc-text">MySQL Proxy</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Proxy-（Atlas）"><span class="toc-text">MySQL Proxy （Atlas）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Amoeba-for-MySQL"><span class="toc-text">Amoeba for MySQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Router"><span class="toc-text">MySQL Router</span></a></li></ol></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="MySQL读写分离"><a href="#MySQL读写分离" class="headerlink" title="MySQL读写分离"></a>MySQL读写分离</h1><h2 id="MySQL读写分离概述"><a href="#MySQL读写分离概述" class="headerlink" title="MySQL读写分离概述"></a>MySQL读写分离概述</h2><h3 id="读写分离-What"><a href="#读写分离-What" class="headerlink" title="读写分离 - What"></a>读写分离 - What</h3><ul>
+<li>在高并发查询场景下，为了满足应用访问需求，通常都会部署多个从库提供查询服务以提升数据库查询的扩展性，将查询分发到从库，让从库分担主库查询负载的技术，我们通常称为读写分离<br><img src="/img/markdown-img-paste-20161110150550728.png" alt=""></li>
+</ul>
+<h3 id="读写分离-Why"><a href="#读写分离-Why" class="headerlink" title="读写分离 - Why"></a>读写分离 - Why</h3><p><img src="/img/markdown-img-paste-20161110161053462.png" alt=""><br><img src="/img/markdown-img-paste-20161110161226636.png" alt=""><br><img src="/img/markdown-img-paste-20161110161319923.png" alt=""><br><img src="/img/markdown-img-paste-20161110161420860.png" alt="">   </p>
+<h3 id="读写分离-How"><a href="#读写分离-How" class="headerlink" title="读写分离 - How"></a>读写分离 - How</h3><p><img src="/img/markdown-img-paste-20161110161450249.png" alt=""><br><img src="/img/markdown-img-paste-20161110161526576.png" alt="">  </p>
+<h3 id="读写分离主要问题"><a href="#读写分离主要问题" class="headerlink" title="读写分离主要问题"></a>读写分离主要问题</h3><p>缺点：</p>
+<ol>
+<li>数据可能不一致</li>
+<li>部署、实现相对复杂<br><img src="/img/markdown-img-paste-20161110161728463.png" alt=""></li>
+</ol>
+<h2 id="读写分离常见方案"><a href="#读写分离常见方案" class="headerlink" title="读写分离常见方案"></a>读写分离常见方案</h2><ul>
+<li>MySQL Proxy</li>
+<li>Amoeba For MySQL</li>
+<li>MySQL Router</li>
+<li>应用端实现</li>
+</ul>
+<h3 id="MySQL-Proxy"><a href="#MySQL-Proxy" class="headerlink" title="MySQL Proxy"></a>MySQL Proxy</h3><p>MySQL Proxy 是MySQL官方开发的一款读写分离中间件，开发多年一直未GA，在功能上存在许多缺陷，目前官方已经放弃开发</p>
+<ul>
+<li>使用C/C++ 开发服务模块</li>
+<li>使用lua脚本语言分析sql语句进行读写分离<br><img src="/img/markdown-img-paste-20161110175403769.png" alt=""></li>
+</ul>
+<h3 id="MySQL-Proxy-（Atlas）"><a href="#MySQL-Proxy-（Atlas）" class="headerlink" title="MySQL Proxy （Atlas）"></a>MySQL Proxy （Atlas）</h3><p>Atlas是360公司开发改进的一款MySQL Proxy分支，基于MySQL Proxy0.8.2，修正大量bug，并添加许多使用功能。已经大规模运行于360公司的各种业务中，经过线上大并发业务考验，也有许多其他公司在使用，开发者与使用者比较活跃<br>Fix：</p>
+<ul>
+<li>Lua 改为C语言，提高性能</li>
+<li>并发下字符集修正</li>
+<li>避免死等待</li>
+<li>主库宕机仍可以读</li>
+<li>MySQL新版兼容等</li>
+</ul>
+<p>Add：</p>
+<ul>
+<li>从库动态上下线</li>
+<li>分库分表</li>
+<li>从库指定负载权重</li>
+<li>IP过滤等</li>
+</ul>
+<p>安装<br>准备：<br>Atlas： <a href="https://github.com/Qihoo360/Atlas/releases" target="_blank" rel="noopener">https://github.com/Qihoo360/Atlas/releases</a></p>
+<p>操作：</p>
+<ol>
+<li>sudo dpkg -i Atlas-2.2-debian7.0-x86_64.deb</li>
+<li>编辑配置文件</li>
+<li>/usr/local/mysql-proxy/bin/mysql-proxyd instancename start</li>
+</ol>
+<h3 id="Amoeba-for-MySQL"><a href="#Amoeba-for-MySQL" class="headerlink" title="Amoeba for MySQL"></a>Amoeba for MySQL</h3><p>Amoeba是类似MySQL Proxy的中间件，采用java语言编写，具有读写分离、数据切分和过滤等功能，是非常早的一款国产MySQL读写分离软件</p>
+<ul>
+<li>支持读写分离</li>
+<li>支持数据拆分</li>
+<li>对事务支持不好</li>
+<li>数据拆分比较简单<br><img src="/img/markdown-img-paste-20161110180125249.png" alt=""></li>
+</ul>
+<h3 id="MySQL-Router"><a href="#MySQL-Router" class="headerlink" title="MySQL Router"></a>MySQL Router</h3><p>MySQL Router 是MySQL官方开发的一款一个轻量级的用来实现高可用和扩展性的中间件，支持读写分离负载均衡，支持跟MySQL Fabric一起使用，刚GA，稳定性等还有待考验</p>
+<p>MySQL Router提供2个端口，读写1个，只读端口1个<br>读写端口：first available<br>只读端口：round robin<br><img src="/img/markdown-img-paste-2016111018245511.png" alt=""></p>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/163/mysql31.html" data-title="MySQL读写分离 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/163/mysql32.html" title="MySQL分布式架构">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL分布式架构</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/163/mysql30.html" title="MySQL高可用架构">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL高可用架构
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/163/mysql31.html" data-title="MySQL读写分离" data-url="http://mydba.xyz/mysql/163/mysql31.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MySQL读写分离"><span class="toc-text">MySQL读写分离</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL读写分离概述"><span class="toc-text">MySQL读写分离概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-What"><span class="toc-text">读写分离 - What</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-Why"><span class="toc-text">读写分离 - Why</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离-How"><span class="toc-text">读写分离 - How</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#读写分离主要问题"><span class="toc-text">读写分离主要问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#读写分离常见方案"><span class="toc-text">读写分离常见方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Proxy"><span class="toc-text">MySQL Proxy</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Proxy-（Atlas）"><span class="toc-text">MySQL Proxy （Atlas）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Amoeba-for-MySQL"><span class="toc-text">Amoeba for MySQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL-Router"><span class="toc-text">MySQL Router</span></a></li></ol></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

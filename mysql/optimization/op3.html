@@ -1,0 +1,609 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 3 子查询的优化（一） | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 3 子查询的优化（一）">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op3.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2016-12-29T05:47:03.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 3 子查询的优化（一）">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op3.html" title="MySQL优化 -- 3 子查询的优化（一）" itemprop="url">MySQL优化 -- 3 子查询的优化（一）</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2016-12-29T05:47:03.000Z" itemprop="datePublished"> 发表于 2016-12-29</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#子查询的优化（一）"><span class="toc-text">子查询的优化（一）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-SubQuery"><span class="toc-text">What is the SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Type-of-SubQuery"><span class="toc-text">Type of SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-does-DB-need-to-optimize-SubQuery"><span class="toc-text">Why does DB  need to optimize SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-optimize-SubQuery"><span class="toc-text">How to optimize SubQuery</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h1 id="子查询的优化（一）"><a href="#子查询的优化（一）" class="headerlink" title="子查询的优化（一）"></a>子查询的优化（一）</h1><p>Logical Query Optimization Subquery (1)</p>
+<h2 id="What-is-the-SubQuery"><a href="#What-is-the-SubQuery" class="headerlink" title="What is the SubQuery"></a>What is the SubQuery</h2><p>当一个查询是另一个查询的子部分时，称之为<strong>子查询</strong> （查询语句中嵌套有查询语句）</p>
+<ul>
+<li><p>查询的子部分，包括那些情况</p>
+<ol>
+<li><p>目标列位置<br>子查询如果位于目标列，则只能是标量子查询，否则数据库可能返回类似”错误:  子查询必须只能返回一个字段”的提示。   </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 示例  </span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t1 (k1 <span class="built_in">INT</span> PRIMARY <span class="keyword">KEY</span>, c1 <span class="built_in">INT</span>);  </span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> t2 (k2 <span class="built_in">INT</span> PRIMARY <span class="keyword">KEY</span>, c2 <span class="built_in">INT</span>);  </span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> t2 <span class="keyword">VALUES</span> (<span class="number">1</span>,<span class="number">10</span>), (<span class="number">2</span>,<span class="number">2</span>), (<span class="number">3</span>,<span class="number">30</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">Empty <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t1 <span class="keyword">values</span> (<span class="number">1</span>,<span class="number">1</span>), (<span class="number">2</span>,<span class="number">2</span>), (<span class="number">3</span>,<span class="number">3</span>);  </span><br><span class="line">Query OK, 3 rows affected (0.01 sec)  </span><br><span class="line">Records: 3  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">ERROR 1242 (21000): Subquery returns more than 1 row</span><br><span class="line"></span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> T2;  </span><br><span class="line">Query OK, 3 rows affected (0.01 sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">Empty <span class="keyword">set</span> (<span class="number">0.00</span> sec)  </span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> t2 <span class="keyword">values</span> (<span class="number">1</span>,<span class="number">10</span>), (<span class="number">2</span>,<span class="number">2</span>), (<span class="number">3</span>,<span class="number">30</span>);  </span><br><span class="line">Query OK, 3 rows affected (0.01 sec)  </span><br><span class="line">Records: 3  Duplicates: 0  Warnings: 0  </span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> K2=<span class="number">1</span>) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">+<span class="comment">------+-----------------------------------+  </span></span><br><span class="line">| c1   | (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> K2=<span class="number">1</span>) |  </span><br><span class="line">+<span class="comment">------+-----------------------------------+  </span></span><br><span class="line">|    <span class="number">1</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">2</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">3</span> |                                <span class="number">10</span> |</span><br><span class="line">|    <span class="number">1</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">2</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">3</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">1</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">2</span> |                                <span class="number">10</span> |  </span><br><span class="line">|    <span class="number">3</span> |                                <span class="number">10</span> |  </span><br><span class="line">+<span class="comment">------+-----------------------------------+  </span></span><br><span class="line"><span class="number">9</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2=<span class="number">1</span>) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">+<span class="comment">------+-----------------------------------+</span></span><br><span class="line">| c1   | (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2=<span class="number">1</span>) |</span><br><span class="line">+<span class="comment">------+-----------------------------------+</span></span><br><span class="line">|    <span class="number">1</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">2</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">3</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">1</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">2</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">3</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">1</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">2</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">|    <span class="number">3</span> |                              <span class="literal">NULL</span> |</span><br><span class="line">+<span class="comment">------+-----------------------------------+</span></span><br><span class="line"><span class="number">9</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2&gt;<span class="number">1</span>) <span class="keyword">FROM</span> t1, t2;  </span><br><span class="line">ERROR 1242 (21000): Subquery returns more than 1 row</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2=<span class="number">10</span>) <span class="keyword">FROM</span> t1, t2;</span><br><span class="line">+<span class="comment">------+------------------------------------+</span></span><br><span class="line">| c1   | (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2=<span class="number">10</span>) |</span><br><span class="line">+<span class="comment">------+------------------------------------+</span></span><br><span class="line">|    <span class="number">1</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">2</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">3</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">1</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">2</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">3</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">1</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">2</span> |                                 <span class="number">10</span> |</span><br><span class="line">|    <span class="number">3</span> |                                 <span class="number">10</span> |</span><br><span class="line">+<span class="comment">------+------------------------------------+</span></span><br><span class="line"><span class="number">9</span> <span class="keyword">rows</span> <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> t2 <span class="keyword">VALUES</span> (<span class="number">4</span>,<span class="number">10</span>);</span><br><span class="line">Query OK, 1 row affected (0.04 sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> t1.c1, (<span class="keyword">SELECT</span> t2.c2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> c2=<span class="number">10</span>) <span class="keyword">FROM</span> t1, t2;</span><br><span class="line">ERROR 1242 (21000): Subquery returns more than 1 row</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>FROM子句位置<br>相关子查询出现在FROM子句中，数据库可能返回类似“在FROM子句中的子查询无法参考相同查询级别中的关系”的提示，所以相关子查询不能出现在FROM子句中；<br>非相关子查询出现在FROM子句中，可上拉子查询到父层，在多表连接时统一考虑连接代价然后择优。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, (<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t1.k1=t2.k2);</span><br><span class="line">ERROR 1248 (42000): Every derived table must have its own alias</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, (<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t1.k1=t2.k2) <span class="keyword">AS</span> A_t12;</span><br><span class="line">ERROR 1054 (42S22): Unknown column 't1.k1' in 'where clause'</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, (<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t2);</span><br><span class="line">ERROR 1248 (42000): Every derived table must have its own alias</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, (<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t2) <span class="keyword">as</span> A_t2;</span><br><span class="line">+<span class="comment">----+------+----+------+</span></span><br><span class="line">| k1 | c1   | k2 | c2   |</span><br><span class="line">+<span class="comment">----+------+----+------+</span></span><br><span class="line">|  1 |    1 |  1 |   10 |</span><br><span class="line">|  2 |    2 |  1 |   10 |</span><br><span class="line">|  3 |    3 |  1 |   10 |</span><br><span class="line">|  1 |    1 |  2 |    2 |</span><br><span class="line">|  2 |    2 |  2 |    2 |</span><br><span class="line">|  3 |    3 |  2 |    2 |</span><br><span class="line">|  1 |    1 |  3 |   30 |</span><br><span class="line">|  2 |    2 |  3 |   30 |</span><br><span class="line">|  3 |    3 |  3 |   30 |</span><br><span class="line">|  1 |    1 |  4 |   10 |</span><br><span class="line">|  2 |    2 |  4 |   10 |</span><br><span class="line">|  3 |    3 |  4 |   10 |</span><br><span class="line">+<span class="comment">----+------+----+------+</span></span><br><span class="line">12 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>WHERE子句位置<br>出现在WHERE子句中的子查询，是一个条件表达式的一部分，而表达式可以分解为操作符和操作数；根据参与运算的不同的数据类型，操作符也不尽相同，如INT型有“&gt;、&lt;、=、&lt;&gt;”等操作，这对子查询均有一定的要求（如INT型的等值操作，要求子查询必须是标量子查询）。另外，子查询出现在WHERE子句中的格式，也有用谓词指定的一些操作，如IN、BETWEEN、EXISTS等。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> k1 <span class="keyword">IN</span> (<span class="keyword">SELECT</span> k2 <span class="keyword">FROM</span> t2);</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| k1 | c1   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  1 |    1 |</span><br><span class="line">|  2 |    2 |</span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> k1 &gt;=<span class="keyword">ANY</span> (<span class="keyword">SELECT</span> k2 <span class="keyword">FROM</span> t2);</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| k1 | c1   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  1 |    1 |</span><br><span class="line">|  2 |    2 |</span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span> (<span class="number">0.04</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> k1 &lt;=<span class="keyword">SOME</span> (<span class="keyword">SELECT</span> k2 <span class="keyword">FROM</span> t2);</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| k1 | c1   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  1 |    1 |</span><br><span class="line">|  2 |    2 |</span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> k1 &lt;=<span class="keyword">ANY</span> (<span class="keyword">SELECT</span> k2 <span class="keyword">FROM</span> t2);</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| k1 | c1   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  1 |    1 |</span><br><span class="line">|  2 |    2 |</span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> k2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> k2=<span class="number">100</span>);</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">| k1 | c1   |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">|  1 |    1 |</span><br><span class="line">|  2 |    2 |</span><br><span class="line">|  3 |    3 |</span><br><span class="line">+<span class="comment">----+------+</span></span><br><span class="line">3 rows in <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>JOIN/ON子句位置<br>JOIN/ON子句可以拆分为两部分，一是JOIN块类似于FROM子句，二是ON子句块类似于WHERE子句，这两部分都可以出现子查询。子查询的处理方式同FROM子句和WHERE子句。</p>
+</li>
+<li><p>GROUPBY子句位置<br>目标列必须和GROUPBY关联。可将子查询写在GROUPBY位置处，但子查询用在GROUPBY处没有实用意义。</p>
+</li>
+<li><p>ORDERBY子句位置<br>可将子查询写在ORDERBY位置处。但ORDERBY操作是作用在整条SQL语句上的，子查询用在ORDERBY处没有实用意义。</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="Type-of-SubQuery"><a href="#Type-of-SubQuery" class="headerlink" title="Type of SubQuery"></a>Type of SubQuery</h2><ul>
+<li><p>从对象间的关系看</p>
+<ol>
+<li><p>相关子查询<br>子查询的执行依赖于外层父查询的一些属性值。子查询因依赖于父查询的参数，当父查询的参数改变时，子查询需要根据新参数值重新执行（查询优化器对相关子查询进行优化有一定意义），如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> col_1 = <span class="keyword">ANY</span></span><br><span class="line">    (<span class="keyword">SELECT</span> col_1 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.col_2 = t1.col_2);</span><br><span class="line"><span class="comment">/* 子查询语句中存在父查询的t1表的col_2列 */</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>非相关子查询<br>子查询的执行，不依赖于外层父查询的任何属性值。这样子查询具有独立性，可独自求解，形成一个子查询计划先于外层的查询求解，如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> col_1 = <span class="keyword">ANY</span></span><br><span class="line">    (<span class="keyword">SELECT</span> col_1 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.col_2 = <span class="number">10</span>);</span><br><span class="line">//子查询语句中（t2）不存在父查询（t1）的属性</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>相关子查询与非相关子查询的优化对比</p>
+</li>
+</ol>
+<blockquote>
+<p>扩展阅读:<br>相关子查询与不相关子查询的优化（一）<br><a href="http://blog.163.com/li_hx/blog/static/1839914132014248292396/" target="_blank" rel="noopener">http://blog.163.com/li_hx/blog/static/1839914132014248292396/</a></p>
+</blockquote>
+<blockquote>
+<p>相关子查询与不相关子查询的优化（二）<br><a href="http://blog.163.com/li_hx/blog/static/1839914132014251031411/" target="_blank" rel="noopener">http://blog.163.com/li_hx/blog/static/1839914132014251031411/</a></p>
+</blockquote>
+<blockquote>
+<p>相关子查询与不相关子查询的优化（三）<br><a href="http://blog.163.com/li_hx/blog/static/183991413201421075949661/" target="_blank" rel="noopener">http://blog.163.com/li_hx/blog/static/183991413201421075949661/</a></p>
+</blockquote>
+</li>
+<li><p>从特定谓词看</p>
+<ol>
+<li><p>[NOT] IN/ALL/ANY/SOME子查询<br>语义相近，表示“[取反] 存在/所有/任何/任何”，左面是操作数，右面是子查询，是最常见的子查询类型之一。</p>
+</li>
+<li><p>[NOT] EXISTS子查询<br>半连接语义，表示“[取反] 存在”，没有左操作数，右面是子查询，也是最常见的子查询类型之一。</p>
+</li>
+<li><p>其他子查询<br>除了上述两种外的所有子查询。</p>
+</li>
+</ol>
+</li>
+<li><p>从语句的构成复杂程度看</p>
+<ol>
+<li><p>SPJ子查询 (select-project-join)<br>由选择(select)、投影(project)、连接(join)操作组成的查询。</p>
+</li>
+<li><p>GROUPBY子查询<br>SPJ子查询加上分组、聚集操作组成的查询。</p>
+</li>
+<li><p>其他子查询<br>GROUPBY子查询中加上其他子句如Top-N 、LIMIT/OFFSET、集合、排序等操作。  </p>
+</li>
+</ol>
+<p>后两种子查询有时合称非SPJ子查询。</p>
+</li>
+<li><p>从结果的角度看</p>
+<ol>
+<li><p>标量子查询<br>子查询返回的结果集类型是一个简单值（return a scalar，a single value）。</p>
+</li>
+<li><p>单行单列子查询<br>子查询返回的结果集类型是零条或一条单元组（return a zero or single row，but only a column）。相似于标量子查询,但可能返回零条元组。</p>
+</li>
+<li><p>多行单列子查询<br>子查询返回的结果集类型是多条元组但只有一个简单列（return multiple rows，but only a column）。</p>
+</li>
+<li><p>表子查询<br>子查询返回的结果集类型是一个表（多行多列）（returna table，one or more rows of one or more columns）。</p>
+</li>
+</ol>
+<p><a href="http://blog.163.com/li_hx/blog/static/1839914132014220111710312/" target="_blank" rel="noopener">子查询辨析</a></p>
+</li>
+</ul>
+<h2 id="Why-does-DB-need-to-optimize-SubQuery"><a href="#Why-does-DB-need-to-optimize-SubQuery" class="headerlink" title="Why does DB  need to optimize SubQuery"></a>Why does DB  need to optimize SubQuery</h2><p>为什么要作子查询优化呢</p>
+<p>在数据库实现早期，查询优化器对子查询一般采用嵌套执行的方式，即对父查询中的每一行，都执行一次子查询，这样子查询会执行很多次。这种执行方式效率很低。</p>
+<p>而对子查询进行优化，可能带来几个数量级的查询效率的提高。<br>子查询转变成为连接操作之后，会得到如下好处：</p>
+<ol>
+<li>子查询不用执行很多次。</li>
+<li>优化器可以根据统计信息来选择不同的连接方法和不同的连接顺序。</li>
+</ol>
+<p>子查询中的连接条件、过滤条件分别变成了父查询的连接条件、过滤条件，优化器可以对这些条件进行下推，以提高执行效率。</p>
+<h2 id="How-to-optimize-SubQuery"><a href="#How-to-optimize-SubQuery" class="headerlink" title="How to optimize SubQuery"></a>How to optimize SubQuery</h2><ol>
+<li><p>子查询合并（Subquery Coalescing）<br>在某些条件下（语义等价：两个查询块产生同样的结果集），多个子查询能够合并成一个子查询（合并后还是子查询，以后可以通过其他技术消除掉子查询）。这样可以把多次表扫描、多次连接减少为单次表扫描和单次连接，如：  </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> a1&lt;<span class="number">10</span> <span class="keyword">AND</span> (</span><br><span class="line">    <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> a2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.a2&lt;<span class="number">5</span> <span class="keyword">AND</span> t2.b2=<span class="number">1</span>) <span class="keyword">OR</span></span><br><span class="line">    <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> a2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.a2&lt;<span class="number">5</span> <span class="keyword">AND</span> t2.b2=<span class="number">2</span>)</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">可优化为：</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> a1&lt;<span class="number">10</span> <span class="keyword">AND</span> (</span><br><span class="line">    <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> a2 <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.a2&lt;<span class="number">5</span> <span class="keyword">AND</span> (t2.b2=<span class="number">1</span> <span class="keyword">OR</span> t2.b2=<span class="number">2</span>)</span><br><span class="line">    <span class="comment">/*两个ESISTS子句合并为一个，条件也进行了合并 */</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>子查询展开（Subquery Unnesting）<br>又称子查询反嵌套，又称为子查询上拉。<br>把一些子查询置于外层的父查询中，作为连接关系与外层父查询并列，其实质是把某些子查询重写为等价的多表连接操作（展开后，子查询不存在了，外部查询变成了多表连接）。</p>
+<p>带来的好处是，有关的访问路径、连接方法和连接顺序可能被有效使用，使得查询语句的层次尽可能的减少。</p>
+<p>常见的IN/ANY/SOME/ALL/EXISTS依据情况转换为半连接（SEMI JOIN）、普通类型的子查询消除等情况属于此类，如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, (<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t2 <span class="keyword">WHERE</span> t2.a2 &gt;<span class="number">10</span>) v_t2</span><br><span class="line"><span class="keyword">WHERE</span> t1.a1&lt;<span class="number">10</span> <span class="keyword">AND</span> v_t2.a2&lt;<span class="number">20</span>;</span><br><span class="line"></span><br><span class="line">可优化为：</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1, t2 <span class="keyword">WHERE</span> t1.a1&lt;<span class="number">10</span> <span class="keyword">AND</span> t2.a2&lt;<span class="number">20</span> <span class="keyword">AND</span> t2.a2 &gt;<span class="number">10</span>;</span><br><span class="line"><span class="comment">/* 子查询变为了t1、t2表的连接操作，相当于把t2表从子查询中上拉了一层 */</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>聚集子查询消除（Aggregate Subquery Elimination）<br>通常，一些系统支持的是标量聚集子查询消除。如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t1 <span class="keyword">WHERE</span> t1.a1&gt;(<span class="keyword">SELECT</span> <span class="keyword">avg</span>(t2.a2) <span class="keyword">FROM</span> t2);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ul>
+<li>子查询展开优化的技术手段<ul>
+<li>展开的条件  <ol>
+<li>如果子查询中出现了聚集、GROUPBY、DISTINCT子句，则子查询只能单独求解，不可以上拉到外层。</li>
+<li>如果子查询只是一个简单格式的（SPJ格式）查询语句，则可以上拉子查询到外层，这样往往能提高查询效率。子查询上拉，讨论的就是这种格式，这也是子查询展开技术处理的范围。  </li>
+</ol>
+</li>
+<li>遵循规则<br>把子查询上拉到上层查询，前提是上拉（展开）后的结果不能带来多余的元组，所以子查询展开需要遵循如下规则<ol>
+<li>如果上层查询的结果没有重复（即SELECT子句中包含主码），则可以展开其子查询。并且展开后的查询的SELECT子句前应加上DISTINCT标志。</li>
+<li>如果上层查询的SELECT语句中有DISTINCT标志，可以直接进行子查询展开。如果内层查询结果没有重复元组，则可以展开。</li>
+</ol>
+</li>
+<li>子查询展开的具体步骤<ol>
+<li>将子查询和外层查询的FROM子句连接为同一个FROM子句，并且修改相应的运行参数。</li>
+<li>将子查询的谓词符号进行相应修改(如：“IN”修改为“=”)。</li>
+<li>将子查询的WHERE条件作为一个整体与外层查询的WHERE条件合并，并用AND条件连接词连接，从而保证新生成的谓词与原旧谓词的上下文意思相同，且成为一个整体。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op3.html" data-title="MySQL优化 -- 3 子查询的优化（一） | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev">
+ <a href="/mysql/optimization/op4.html" title="MySQL优化 -- 4 子查询的优化（二）">
+  <strong>上一篇：</strong><br>
+  <span>
+  MySQL优化 -- 4 子查询的优化（二）</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/mysql/optimization/op2.html" title="MySQL优化 -- 2 数据库查询优化技术总揽">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 2 数据库查询优化技术总揽
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op3.html" data-title="MySQL优化 -- 3 子查询的优化（一）" data-url="http://mydba.xyz/mysql/optimization/op3.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#子查询的优化（一）"><span class="toc-text">子查询的优化（一）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-the-SubQuery"><span class="toc-text">What is the SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Type-of-SubQuery"><span class="toc-text">Type of SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-does-DB-need-to-optimize-SubQuery"><span class="toc-text">Why does DB  need to optimize SubQuery</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-to-optimize-SubQuery"><span class="toc-text">How to optimize SubQuery</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>40</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
