@@ -2,23 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://mydba.xyz/%E5%85%B6%E4%BB%96/second.html</loc>
-    
-    <lastmod>2019-05-09T09:23:13.066Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://mydba.xyz/%E5%85%B6%E4%BB%96/hello-world.html</loc>
     
-    <lastmod>2019-05-09T09:23:12.913Z</lastmod>
+    <lastmod>2019-05-09T10:07:28.104Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://mydba.xyz/404.html</loc>
     
-    <lastmod>2018-12-05T09:04:28.058Z</lastmod>
+    <lastmod>2019-05-09T10:07:26.017Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://mydba.xyz/%E5%85%B6%E4%BB%96/second.html</loc>
+    
+    <lastmod>2019-05-09T09:23:13.066Z</lastmod>
     
   </url>
   
