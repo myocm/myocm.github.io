@@ -34,7 +34,7 @@ tags:
 - 记录应用程序对数据的所有更改
 - 可用于数据恢复
 - 可用于实例间数据同步
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161102110911946.png)
+![](/img/markdown-img-paste-20161102110911946.png)
 
 ## 服务错误日志
 - 记录实例启动运行过程中重要消息
@@ -83,8 +83,8 @@ flush logs;
 
 ### InnoDB事务日志重用机制
 - InnoDB事务日志采用两组文件交替重用
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016110211280515.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161102112735609.png)  
+![](/img/markdown-img-paste-2016110211280515.png)  
+![](/img/markdown-img-paste-20161102112735609.png)  
 
 - 相关参数
   - innodb_log_group_home_dir  
@@ -142,7 +142,7 @@ mysqlbinlog  /data/mysql_data/node_1/mysql-bin.000005
 --start-datetime | --stop-datetime
 --start-position | --stop-position
 ```
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161102114219122.png)
+![](/img/markdown-img-paste-20161102114219122.png)
 
 ### binlog格式
 - 主要参数

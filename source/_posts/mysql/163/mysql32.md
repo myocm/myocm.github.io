@@ -19,13 +19,13 @@ tags:
 
 ## 分布式数据库的分类
 - shared Nothing VS Shared Anything
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111114807700.png)
+![](/img/markdown-img-paste-20161111114807700.png)
 
 ### Shared Nothing
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111114921125.png)
+![](/img/markdown-img-paste-20161111114921125.png)
 
 ### Shared Anything
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111115004872.png)
+![](/img/markdown-img-paste-20161111115004872.png)
 
 ## MySQL分布式架构
 - 分布式事务处理与XA协议
@@ -35,7 +35,7 @@ tags:
 ### 分布式事务
 - Distributed（XA）Transactions
 - 2pc（Two Phase Commit）Transactions
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111115341556.png)
+![](/img/markdown-img-paste-20161111115341556.png)
 
 ### MySQL分布式事务
 - 什么是分布式事务处理  
@@ -69,7 +69,7 @@ MySQL官方手册中有一段话：
 
 - MySQL官方最终修复
 http://dev.mysql.com/worklog/task/?id=6860  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111153252783.png)
+![](/img/markdown-img-paste-20161111153252783.png)
 
 
 ## 开源分布式软件MyCat
@@ -86,7 +86,7 @@ http://dev.mysql.com/worklog/task/?id=6860
 - 要做MySQL界的Tomcat
 
 ### Mycat架构
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111153832112.png)
+![](/img/markdown-img-paste-20161111153832112.png)
 
 ### Mycat的功能特点
 - 数据拆分，丰富的拆分策略，数据库水平扩容
@@ -162,11 +162,11 @@ insert into table1(id,name) values(next value for MYCATSEQ_GLOBAL,'test');
 - 基于数据库
 比直接存文件要安全的多  
 但是DB要支持高可用  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111155841450.png)
+![](/img/markdown-img-paste-20161111155841450.png)
 - 基于本地时间戳
 不依赖任何服务  
 ID分配一般都较大  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160000531.png)
+![](/img/markdown-img-paste-20161111160000531.png)
 
 ###Mycat的部署与安装
 - 重要概念
@@ -176,16 +176,16 @@ ID分配一般都较大
   - 分区键
 
 - 部署安装
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160226501.png)
+![](/img/markdown-img-paste-20161111160226501.png)
 
 - 启动Mycat
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016111116030921.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160348465.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160418120.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160442868.png)  
+![](/img/markdown-img-paste-2016111116030921.png)  
+![](/img/markdown-img-paste-20161111160348465.png)  
+![](/img/markdown-img-paste-20161111160418120.png)  
+![](/img/markdown-img-paste-20161111160442868.png)  
 
 - 使用Mycat
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111160519290.png)  
+![](/img/markdown-img-paste-20161111160519290.png)  
 
 
 

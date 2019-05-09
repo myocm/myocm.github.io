@@ -27,7 +27,7 @@ tags:
   - 数据文件或文本格式数据
 - 操作日志(binlog)
   - 数据库变更日志
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161103154539948.png)
+  ![](/img/markdown-img-paste-20161103154539948.png)
 
 ### 冷备份与热备份
 - 冷备份
@@ -52,7 +52,7 @@ tags:
   - 备份完整的数据库
 - 增量备份
   - 只备份上一次备份以来发生修改的数据
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161103155256846.png)
+![](/img/markdown-img-paste-20161103155256846.png)
 
 ### 备份周期
 考虑因素：
@@ -104,7 +104,7 @@ surce XXX.sql;
 - 从磁盘上拷贝数据文件
 - 从InnoDB redo log file 实时拷贝走备份期间产生的所有redo日志
 - 恢复的时候  数据文件+redo日志 = 一致性备份
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161103175351142.png)
+![](/img/markdown-img-paste-20161103175351142.png)
 
 #### 实用脚本innobackupex
 - 开源Perl脚本，封装调用xtrabackup及一系列相关工具与OS操作，最终完成备份过程
@@ -112,7 +112,7 @@ surce XXX.sql;
 - 备份一致性保证
 
 - innobackupex备份基本流程
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161103175631788.png)
+![](/img/markdown-img-paste-20161103175631788.png)
 
 - innobackupex使用示例
 1. 全量备份

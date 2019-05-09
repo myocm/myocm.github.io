@@ -18,11 +18,11 @@ tags:
   - 保护数据的完整性和一致性
 - 数据库中的锁
   - 分为两大类
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026135913863.png)
+  ![](/img/markdown-img-paste-20161026135913863.png)
   - 主要关心的是事务lock
 - 数据库事务并发
   - 如果事务允许并发修改同一条数据...
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026140540523.png)
+  ![](/img/markdown-img-paste-20161026140540523.png)
   - 对同一行记录的修改必须串行化
 - 不同数据库系统事务锁粒度
   - 行锁
@@ -46,8 +46,8 @@ tags:
   - 意向锁和X/S锁级别不同，除了阻塞全表级别的X/S锁外其他任何锁
 
 - InnoDB锁模式互斥
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026161805186.png)
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026162258493.png)
+![](/img/markdown-img-paste-20161026161805186.png)
+![](/img/markdown-img-paste-20161026162258493.png)
 
 - 数据库加锁操作
   - 一般的select语句不加任何锁，也不会被任何事务锁阻塞
@@ -76,7 +76,7 @@ tags:
 
 ## 死锁
 - 什么是死锁
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026163610705.png)
+  ![](/img/markdown-img-paste-20161026163610705.png)
 - 死锁数据库自动解决
   - 数据库挑选冲突事务中回滚代价较小的事务回滚
 - 死锁预防
@@ -87,9 +87,9 @@ tags:
 ## 业务加锁
 - 业务流程中的悲观锁
   - 假如amount不能为负值...
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026163950398.png)
+  ![](/img/markdown-img-paste-20161026163950398.png)
 - 如何缩短锁的时间？
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161026164057949.png)
+  ![](/img/markdown-img-paste-20161026164057949.png)
 
 
 ----

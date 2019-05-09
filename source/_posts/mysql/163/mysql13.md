@@ -27,7 +27,7 @@ commit; | 提交（全部完成）
 rollback; | 回滚（回到初始状态）
 
 ## MySQL数据库事务控制操作
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024140520481.png)
+![](/img/markdown-img-paste-20161024140520481.png)
 
 - 自动提交  
 autocommit可以在session级别设置  
@@ -54,11 +54,11 @@ DDL永远是自动提交，无法通过rollback回滚。
 
 ### 隔离性
 - 数据库事务在提交完成前，中间的任何数据变化对其他的事务都是不可见的
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024152526554.png)
+![](/img/markdown-img-paste-20161024152526554.png)
 #### 数据库隔离现象
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024152701975.png)
+![](/img/markdown-img-paste-20161024152701975.png)
 #### 数据库隔离等级
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024153054942.png)
+![](/img/markdown-img-paste-20161024153054942.png)
 #### MySQL的事务隔离级别
 - InnoDB默认标记为可重复读（Repeatable read）
 - InnoDB并不是标准定义上的可重复读
@@ -96,15 +96,15 @@ set [session | global] transaction isolation level {READ-UNCOMMITTED | READ-COMM
   - 数据库异常不会丢失事务更新
   - 通常认为成功写入磁盘的数据即为持久化成功
 - 持久化的实现
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024152154504.png)
+![](/img/markdown-img-paste-20161024152154504.png)
 
 ## 事务与并发写
 - 某个正在更新的记录在提交或回滚前不能被其他事务同时更新
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024155020213.png)
+![](/img/markdown-img-paste-20161024155020213.png)
 
 ## 事务回滚的实现
 - 回滚段（rollback segment） 与数据前像
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161024155232929.png)
+![](/img/markdown-img-paste-20161024155232929.png)
 
 ----
 Good luck!  

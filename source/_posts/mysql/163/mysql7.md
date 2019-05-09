@@ -23,7 +23,7 @@ tags:
 
 ### DataBase/Schema
 - 库、表、行、层级关系
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161019102844684.png)
+![](/img/markdown-img-paste-20161019102844684.png)
 - 一个DataBase对应一个Schema
 - 一个Schema包含一个或多个表
 - 一个表包含一个或多个字段

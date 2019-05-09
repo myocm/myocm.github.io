@@ -372,7 +372,7 @@ Threads: 1  Questions: 36  Slow queries: 0  Opens: 184  Flush tables: 2  Open ta
 default-character-set=utf8
 ```
 
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016102411195854.png)
+![](/img/markdown-img-paste-2016102411195854.png)
 
 ### 常见乱码原因
 1. 数据存储字符集不能正确编码（不支持）client发来的数据：

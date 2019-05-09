@@ -25,7 +25,7 @@ tags:
 - CPU
 - 网络吞吐量
 - 磁盘容量  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161028111633869.png)
+![](/img/markdown-img-paste-20161028111633869.png)
 
 ## 数据库业务特点关键词
 
@@ -71,10 +71,10 @@ tags:
 - 还可能访问到的较早数据存放在线上库磁盘中
 - 更早的不会常规访问的数据定期迁移至历史库中
 - 区分哪些数据时效性强可以迁移
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161028113557257.png)
+![](/img/markdown-img-paste-20161028113557257.png)
 
 ## 服务器资源选型 - 将可选方案列出来
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161028113800391.png)
+  ![](/img/markdown-img-paste-20161028113800391.png)
 
 ### 案例一，网易云音乐曲库数据库服务器评估
 - 用于存放线上数千万歌曲信息
@@ -99,7 +99,7 @@ tags:
 - 磁盘空间需求一般，≥400G
 - 磁盘IO能力需求一般
 - 网络流量要求，8k*2500/1024≈20MB/s,一般
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161028115127210.png)
+![](/img/markdown-img-paste-20161028115127210.png)
 
 ### 案例二，网易理财销售数据库服务器评估
 - 用于存放理财用户线上订单
@@ -130,7 +130,7 @@ tags:
   - 并发流量较高
   - 响应速度要求高
 
- ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161028120225856.png)
+ ![](/img/markdown-img-paste-20161028120225856.png)
 
 
 

@@ -170,7 +170,7 @@ DROP USER 'jeffrey'@'localhost';
 - db
 - tables_priv
 - columns_priv
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161019171029515.png)
+![](/img/markdown-img-paste-20161019171029515.png)
 
 ### MySQL权限上有哪些问题
 在5.6时代  

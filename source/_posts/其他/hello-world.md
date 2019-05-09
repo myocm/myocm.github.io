@@ -159,4 +159,4 @@ jacman  https://github.com/wuchong/jacman/wiki/%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D
 ---
 Good luck!  
 冬日暖阳
-![](http://ocaw8wyva.bkt.clouddn.com/0d67fd84d40f37a3430eb33347f2a72b.png)
+![](/img/0d67fd84d40f37a3430eb33347f2a72b.png)

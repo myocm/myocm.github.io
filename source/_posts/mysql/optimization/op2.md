@@ -80,7 +80,7 @@ Database Query Optimization Technology Overview
 举例来说，就是表A和表B先连接得到中间结果，然后再和另外的表C连接得到新的中间方式，直至所有表都被连接完毕（连接操作就是操作符，这个示例有两个连接操作符。A连接B连接C、C连接B连接A就是两种不同的执行方案，即是两个不同的执行计划，查询优化要选出最高效的一个执行方案）。
 
 查询计划的长像：  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161227170038583.png)
+![](/img/markdown-img-paste-20161227170038583.png)
 
 查询计划，从形式上看，是一颗二叉树，树叶是每个单表对象；  
 两个树叶的父结点是一个连接操作符（如左外连接操作符，A left-out join B）连接后的中间结果（另外还有一些其他结点如排序操作等也可以作为中间结果）这个结果是一个临时“关系”，这样直至根结点。
@@ -241,7 +241,7 @@ FROM (t1 LEFT JOIN t2 ON true), (t3 FULL JOIN t4 ON true), t5
        id3=id4 AND
        id4=id5;
 ```
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161228160214105.png)
+![](/img/markdown-img-paste-20161228160214105.png)
 1) 从第1行到第9行，表示了完整的查询执行计划。  
 2) 第1行到第3行，表明查询计划的结构；id表示对象被操作的顺序；id值大，先被执行；如果相同，执行顺序从上到下。  
 3) 从第4行起，每一行为一个节点，表示本节点被操作对象的可用信息，如索引等。  
@@ -252,7 +252,7 @@ FROM (t1 LEFT JOIN t2 ON true), (t3 FULL JOIN t4 ON true), t5
 
   嵌套循环算法  
   MySQL   块嵌套循环算法  
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161228162809846.png)
+  ![](/img/markdown-img-paste-20161228162809846.png)
 
 - 结点解析  
 1) id：每个被独立执行的操作的标识，表示对象被操作的顺序；id值大，先被执行；如果相同，执行顺序从上到下。  
@@ -268,11 +268,11 @@ FROM (t1 LEFT JOIN t2 ON true), (t3 FULL JOIN t4 ON true), t5
 11) filtered：按照条件表上数据被过滤的元组个数的百分比，“rows×filtered/100”可以求出过滤后的元组数即实际的元组数。  
 12) extra: MySQL 查询优化器执行查询的过程中对查询计划的重要补充信息，具体如表C-4所示。
 
-  ![C-2](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161228171242880.png)
+  ![C-2](/img/markdown-img-paste-20161228171242880.png)
 
-  ![C-3](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161228171327962.png)
+  ![C-3](/img/markdown-img-paste-20161228171327962.png)
 
-  ![C-4](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161228172258813.png)
+  ![C-4](/img/markdown-img-paste-20161228172258813.png)
 
 
 ----

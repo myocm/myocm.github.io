@@ -26,7 +26,7 @@ tags:
 - 完整的数据库操作日志（binlog）
 
 ## 数据恢复思路
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161104153340569.png)
+![](/img/markdown-img-paste-20161104153340569.png)
 1. 备份4 + binlog4 恢复到故障时间点（适用于各种数据丢失场景）
 2. 挖掘binlog4 获取相关SQL语句，构造反转SQL语句并应用到数据库（只适用于记录丢失，且binlog必须是row格式）
 

@@ -16,16 +16,16 @@ tags:
 ## 什么是索引（Index）
 - 数据库索引查找
   - 全表扫描 VS 索引查找
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027173246214.png)  
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027174513246.png)
+  ![](/img/markdown-img-paste-20161027173246214.png)  
+  ![](/img/markdown-img-paste-20161027174513246.png)
 
 - 如何根据首字母找到所在行
   - 二分查找
   - B+tree
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027174805131.png)
+  ![](/img/markdown-img-paste-20161027174805131.png)
 
 - InnoDB表聚簇索引
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027175402230.png)
+  ![](/img/markdown-img-paste-20161027175402230.png)
 
 ## 如何使用索引
 - 创建索引
@@ -59,7 +59,7 @@ tags:
   ```
 - 索引与字段选择性
   - 某个字段其值的重复程度
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027181823716.png)
+  ![](/img/markdown-img-paste-20161027181823716.png)
   - 选择性很差的字段通常不适合创建单列索引
     - 男女比例相仿的表中性别不适合创建单列索引
     - 如果男女比例极不平衡，要查询的又是少数方（理工院校查女生）可以考虑使用索引
@@ -145,7 +145,7 @@ tags:
   order by a asc,b desc
   ```
 ## 查看查询是否使用了索引
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027205646396.png)
+![](/img/markdown-img-paste-20161027205646396.png)
 - explain 是确定一个查询如何走索引最简便有效的方法
 ```sql
 explain select * from tb_test ;

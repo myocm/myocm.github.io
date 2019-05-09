@@ -13,7 +13,7 @@ tags:
 # MySQL5.7新特性
 
 ## MySQL版本时间轴
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111161507737.png)
+![](/img/markdown-img-paste-20161111161507737.png)
 
 ## MySQL5.7 简介
 - 更强大的功能：原生JSON支持；新增安全性功能；新增地理位置支持GeoJSON，GeoHash特性
@@ -27,7 +27,7 @@ tags:
 - BLOB存储
 - 混合存储结构化与非结构化数据
 - 事务特性
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111162051691.png)
+![](/img/markdown-img-paste-20161111162051691.png)
 
 ### 安全性
 - 初始化数据库： root密码由空变成了随机密码；不在自动创建test数据库
@@ -86,7 +86,7 @@ autocommit 下的不加锁的select语句
   - LOGICAL_CLOCK
 
 ### 基准测试对比
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161111163801686.png)
+![](/img/markdown-img-paste-20161111163801686.png)
 
 
 ## 运维

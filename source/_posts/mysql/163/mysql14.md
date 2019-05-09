@@ -13,10 +13,10 @@ tags:
 # MySQL存储引擎概述
 
 ## 存储引擎的概念
-![MySQL体系架构图](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161025105054209.png)
+![MySQL体系架构图](/img/markdown-img-paste-20161025105054209.png)
 
 在MySQL架构体系中，服务层相当于书记员的大脑，决定写什么，而存储引擎层相当于书记员的手，决定怎么写，写于何处。
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161025105411825.png)
+![](/img/markdown-img-paste-20161025105411825.png)
 
 
 - MySQL 有多种存储引擎，可插拔，可修改存储引擎
@@ -71,7 +71,7 @@ show engines;
 
 ## MySQL主要存储引擎的特点及适用场景
 - 主要存储引擎及特点
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016102511234671.png)
+![](/img/markdown-img-paste-2016102511234671.png)
 
 - 改变表的存储引擎  
 ```sql
@@ -129,7 +129,7 @@ Create Table: CREATE TABLE `e1` (
 - 数据不作任何存储
 - 利用MySQL Replicate，充当日志服务器
 - 在MySQL Replicate环境中充当代理主库
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161025114127991.png)
+![](/img/markdown-img-paste-20161025114127991.png)
 
 ### TokuDB存储引擎
 - 分形树存储结构
@@ -145,7 +145,7 @@ Create Table: CREATE TABLE `e1` (
 - 支持事务
 - 设计上易于扩展
 - 面向未来，线上慎用
-![MySQL Cluster Components](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161025142838857.png)
+![MySQL Cluster Components](/img/markdown-img-paste-20161025142838857.png)
 ----
 Good luck!  
 冬日暖阳

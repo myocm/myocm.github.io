@@ -18,7 +18,7 @@ tags:
 ### 高可用（High Availability）
 - 应用提供持续不间断（可用）的服务的能力
 - 系统高可用性的评价通常用可用率表示
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109101110110.png)
+![](/img/markdown-img-paste-20161109101110110.png)
 
 ### 造成不可用的原因
 - 硬件故障（各种）
@@ -31,7 +31,7 @@ tags:
 - 冗余，Redundancy
 - 关键软硬件通过备用冗余避免故障时长时间的不可用
 - 数据软件，硬件，存储的数据，都要通过冗余确保故障时可替换
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109101529804.png)
+![](/img/markdown-img-paste-20161109101529804.png)
 
 ### 数据库冗余与可用性
 - 数据库服务在冗余实现上有其特殊性
@@ -43,17 +43,17 @@ tags:
 ## MySQL高可用常见方案
 
 ### 基于共享存储的单活方案（极不常用）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109102821801.png)
+![](/img/markdown-img-paste-20161109102821801.png)
 
 ### 基于存储复制的数据冗余单活（不常用）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109102927615.png)
+![](/img/markdown-img-paste-20161109102927615.png)
 
 ### 基于MySQL主从复制（常用，普适）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109103031751.png)
+![](/img/markdown-img-paste-20161109103031751.png)
 
 ### 基于集群提交通信协议的多主复制（一定场景适用）
 Percona XtraDB Cluster（Galera cluster）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109103318671.png)
+![](/img/markdown-img-paste-20161109103318671.png)
 
 ## MySQL主从复制方案
 ### 主从复制高可用方案需要改进的问题
@@ -63,10 +63,10 @@ Percona XtraDB Cluster（Galera cluster）
 
 ###  主从复制高可用方案改进
 - 为了避免应用人工修改切换IP，引入VIP漂移方案  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109103809769.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109103842969.png)
+![](/img/markdown-img-paste-20161109103809769.png)  
+![](/img/markdown-img-paste-20161109103842969.png)
 - 为了减少人工介入处理的时间开销引入自动探活处理机制
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109104014343.png)
+![](/img/markdown-img-paste-20161109104014343.png)
 
 ### 高可用中间层与RDS
 - VIP解决应用切换问题
@@ -86,10 +86,10 @@ Percona XtraDB Cluster（Galera cluster）
 
 ### 主从复制延迟
 - 日志传输为什么会延迟  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109104833925.png)    
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109104925267.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109180036373.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109180133558.png)
+![](/img/markdown-img-paste-20161109104833925.png)    
+![](/img/markdown-img-paste-20161109104925267.png)  
+![](/img/markdown-img-paste-20161109180036373.png)  
+![](/img/markdown-img-paste-20161109180133558.png)
 
 ### 比较完善的MySQL高可用方案
 - 半同步复制 + 高可用中间层 + VIP管理方案
@@ -101,7 +101,7 @@ Percona XtraDB Cluster（Galera cluster）
 - 用一个管理节点监控后端数据库主库可用性
 - 提供VIP漂移接口，不提供具体方法
 - 提供补全从库日志的脚本
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109180638353.png)
+![](/img/markdown-img-paste-20161109180638353.png)
 
 ### MHA的安装步骤
 1. 规划
@@ -112,7 +112,7 @@ Percona XtraDB Cluster（Galera cluster）
 6. 配置MHA配置文件mha_manager.cnf
 7. 数据库配置主从，添加mha连接用户...etc
 8. 启动MHA开始监控数据库主从集群
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161109181110980.png)
+![](/img/markdown-img-paste-20161109181110980.png)
 
 
 

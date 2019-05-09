@@ -16,7 +16,7 @@ Outer Join Elimination、 Join Elimination、 Nest Join Elimination
 ## Outer Join Elimination
 
 ### What is Outer Join ?
-![外连接]( http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20180104153553920.png)
+![外连接]( /img/markdown-img-paste-20180104153553920.png)
 
 内连接为：A 表和 B 表都满足连接条件的部分。  
 外连接为：A 表和 B 表都满足连接条件的部分 加上 A 满足连接条件而 B 不满足连接条件的部分。（A 为主连接表的情况）。  

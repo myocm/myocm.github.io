@@ -40,4 +40,4 @@ hexo g   # 产生可以发布的静态文件
 ----
 Good luck!  
 冬日暖阳
-![](http://ocaw8wyva.bkt.clouddn.com/fab34411cdca2bfa7558d8f8891c9860.png)
+![](/img/fab34411cdca2bfa7558d8f8891c9860.png)

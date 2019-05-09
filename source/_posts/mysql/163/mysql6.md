@@ -21,7 +21,7 @@ tags:
 - mediumint
 - int
 - bigint  
-![整型范围](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161017163215545.png)
+![整型范围](/img/markdown-img-paste-20161017163215545.png)
   - int(11) VS int(21)  
 存储和存储范围，计算完全一样，只是在使用zerofill（默认自动加上unsigned）时，显示的宽度不一样
 ```sql
@@ -74,7 +74,7 @@ Query OK, 1 row affected (0.04 sec)
 ### 浮点型
   - FLOAT (M,D)
   - DOUBLE (M,D)
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161017163337402.png)
+  ![](/img/markdown-img-paste-20161017163337402.png)
   ```sql
  create table t ( a int, b float(7,3)) engine=Innodb;
 Query OK, 0 rows affected (0.05 sec)
@@ -147,7 +147,7 @@ utf8mb4是utf8的超集.
 
 emoji表情
 
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161018121754306.png)
+![](/img/markdown-img-paste-20161018121754306.png)
 > JAVA 程序支持emoji表情的要求
 > - MySQL版本>5.5.3
 > - JDBC驱动版本>5.1.13
@@ -159,7 +159,7 @@ CHAR、VARCHAR 和TEXT的区别
 - CHAR和VARCHAR存储单位为字符
 - TEXT存储单位为字节，总大小为65535字节，约为64KB
 - TEXT在数据库内部大多存储格式为溢出页，效率不如CHAR
-![溢出页](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016101817430651.png)
+![溢出页](/img/markdown-img-paste-2016101817430651.png)
 
 
 - BLOB  

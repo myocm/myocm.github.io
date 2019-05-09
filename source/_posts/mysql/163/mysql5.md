@@ -74,11 +74,11 @@ DBA负责维护数据库的
 ## DBA如何发展
 - 大公司 or 小公司
 - 发展通道
-![DBA发展通道](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016101711582444.png)
+![DBA发展通道](/img/markdown-img-paste-2016101711582444.png)
 
 
 
-![数据库访问优惠漏斗法则](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161017104710997.png)
+![数据库访问优惠漏斗法则](/img/markdown-img-paste-20161017104710997.png)
 
 
 ----

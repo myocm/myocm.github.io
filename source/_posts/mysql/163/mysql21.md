@@ -41,7 +41,7 @@ tags:
 ## MySQL测试分类
   - CPU Bound
   - IO Bound
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016103111195853.png)
+  ![](/img/markdown-img-paste-2016103111195853.png)
 
 ## 常见的测试工具
 - 开源的MySQL性能测试工具
@@ -113,11 +113,11 @@ lrwxrwxrwx 1 root root 54 2016-10-31 14:03:37 libmysqlclient.so.21 -> /opt/freew
 
 ### Sysbench流程
 - 常见做法
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031141917966.png)
+![](/img/markdown-img-paste-20161031141917966.png)
 
 #### Prepare语法
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031142038603.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031142424884.png)
+![](/img/markdown-img-paste-20161031142038603.png)  
+![](/img/markdown-img-paste-20161031142424884.png)
 ```
 ./sysbench --test=/home/sdy/sysbench/sysbench/sysbench/tests/db/parallel_prepare.lua --oltp_tables_count=1 --rand-init=on --oltp-table-size=10000 --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root --mysql-db=demo --max-requests=0 prepare
 ```
@@ -138,8 +138,8 @@ Create Table: CREATE TABLE `sbtest1` (
 ```
 
 #### Run语法
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031144359270.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031144520508.png)
+![](/img/markdown-img-paste-20161031144359270.png)  
+![](/img/markdown-img-paste-20161031144520508.png)
 ```
 ./sysbench --test=/home/sdy/sysbench/sysbench/sysbench/tests/db/oltp.lua --oltp-table-size=10000 --oltp_tables_count=1 --num-threads=100 --oltp-read-only=off --report-interval=10 --rand-type=uniform --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root --mysql-db=demo --max-time=1000 --max-requests=0 run
 ```
@@ -147,25 +147,25 @@ Create Table: CREATE TABLE `sbtest1` (
 #### Cleanup
 - 手动drop掉表和数据库
 - 使用sysbench提供的cleanup命令
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031151050504.png)  
+![](/img/markdown-img-paste-20161031151050504.png)  
 ```
 ./sysbench --test=/home/sdy/sysbench/sysbench/sysbench/tests/db/parallel_prepare.lua --oltp_tables_count=1 --rand-init=on --oltp-table-size=10000 --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root --mysql-db=demo --max-requests=0 cleanup
 ```
 
 #### 特殊情况
 - 写入测试（纯Insert操作）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031144837322.png)
+![](/img/markdown-img-paste-20161031144837322.png)
 
 #### Sysbench输出解读
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016103115085522.png)
+![](/img/markdown-img-paste-2016103115085522.png)
 
 ## Tpcc-mysql
 - TPC-C是专门针对联机交易处理系统(OLTP系统)的规范
 - Tpcc-mysql 由percona根据规范实现
 
 ### TPCC流程
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031151833719.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031151901758.png)
+![](/img/markdown-img-paste-20161031151833719.png)  
+![](/img/markdown-img-paste-20161031151901758.png)
 - 下载tpcc-mysql
   - bzr branch lp:~percona-dev/perconatools/tpcc-mysql
 - 编译安装
@@ -175,7 +175,7 @@ Create Table: CREATE TABLE `sbtest1` (
     - export C_INCLUDE_PATH=$MYSQL_HOME/include
     - export PATH=$MYSQL_HOME/bin:$PATH
 ### 使用tpcc-mysql的步骤
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031152312810.png)
+![](/img/markdown-img-paste-20161031152312810.png)
 
 - 创建表结果
 手工建库，使用下面的脚本建表和约束。
@@ -184,23 +184,23 @@ Create Table: CREATE TABLE `sbtest1` (
 
 - Tpcc-load
 tpcc-load [server] [DB] [user] [pass] [warehouse]
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016103115271801.png)
+![](/img/markdown-img-paste-2016103115271801.png)
 ```
 ./tpcc_load 127.0.0.1 tpcc root root 1
 ```
 
 - Tpcc-start
 tpcc-start -h server_host -P port -d database_name -u mysql_user -p mysql-password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031153014782.png)
+![](/img/markdown-img-paste-20161031153014782.png)
 ```
 ./tpcc_start -h 127.0.0.1 -P 3306 -d tpcc -u root -p root -w 1 -c 120 -r 30 -l 180 -i 10 -f report_file
 ```
 
 - Tpcc-mysql输出解读
   - 运行过程的输出
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016103115313357.png)
+  ![](/img/markdown-img-paste-2016103115313357.png)
   - 运行结束输出结果
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161031153159795.png)
+  ![](/img/markdown-img-paste-20161031153159795.png)
 ```
  10, 411(2):3.794|8.120, 412(0):1.193|3.019, 41(0):0.529|1.412, 41(0):4.648|6.283, 41(0):7.640|9.171
 ###第一列代表时间，秒， 第二列，新增订单执行成功次数（超时次数）：90% 业务的响应时间| 最大响应时间

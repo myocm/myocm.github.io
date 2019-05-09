@@ -16,7 +16,7 @@ tags:
 - 设计数据库的表，索引，以及表和表的关系
   - 在数据建模的基础上将关系模型转化为数据库表
   - 满足业务模型需要基础上根据数据库和应用特点优化表结构
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027105722660.png)
+  ![](/img/markdown-img-paste-20161027105722660.png)
 
 ## 为什么Schema需要设计
 - Schema关系到应用程序功能与性能
@@ -51,12 +51,12 @@ tags:
 ### 反范式，冗余必要字段
 - 针对核心SQL保留查询结果所必须的冗余字段，避免频繁join
   - 例：消息表中冗余了每次读消息必须返回的nickname字段，避免每次读消息都变成join操作，代价是用户修改nickname成本变高。
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016102711213288.png)
+  ![](/img/markdown-img-paste-2016102711213288.png)
 
 ### 拆分大字段
 - 拆分大字段到单独表中，避免范围扫描代价大
   - 例：博文表拆分两份，标题表只保留标题和内容简介部分，用于快速批量返回标题列表，正文表保存大段博文内容，用于点开文章单个读取。
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027112924165.png)
+  ![](/img/markdown-img-paste-20161027112924165.png)
 
 ### 避免过多字段或过长行
 - 根据SQL必要返回设计字段，有必要就拆表，避免过多字段
@@ -77,32 +77,32 @@ tags:
 ### 热点读数据特殊处理
 - 根据数据获取的频率或数量不同对热点数据做特殊处理
   - 例：论坛系统中的置顶帖，公告贴，可以单独拆分存储，由于每次访问都要全部都出来，单独放一起，避免每次都到普通表中随机找出来
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027141300791.png)
+  ![](/img/markdown-img-paste-20161027141300791.png)
 
 ### 热点写数据特殊处理
 - 根据数据获取的频率或数量不同对热点数据做特殊处理
   - 例：微博系统中对大量人关注的热点账号消息从“推”改为“拉”，避免过量insert操作
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027141935301.png)
+  ![](/img/markdown-img-paste-20161027141935301.png)
 
 ### 准实时统计
 - 对不需要精确结果的计数等统计要求，建立定期更新结果表
   - 例：首页要求展示动态成交总金额，维护一个计数表，每分钟根据原注册时间获取增量sum值更新计数表，避免每次用户刷新都要扫描交易全记录表
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027143127271.png)
+  ![](/img/markdown-img-paste-20161027143127271.png)
 
 ### 实时统计改进1--触发器实时统计
 - 对需要精确统计的计数利用数据库触发器维护计数表
   - 例：用户量冲亿活动要求实时统计，用户表上加触发器，每次有新用户插入就同时在计数表+1
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027143529160.png)
+  ![](/img/markdown-img-paste-20161027143529160.png)
 
 ### 实时统计改进2--缓存实时统计
 - 对需要精确统计的计数利用前端缓存实时维护计数
   - 例：用户量冲亿活动要求实时统计，注册数量在缓存中实时维护，每注册一个就+1，完全避免数据库读写操作，缓存万一故障失效，可从数据库整体count重新获取
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027143903753.png)
+  ![](/img/markdown-img-paste-20161027143903753.png)
 
 ### 实时统计改进3--最大自增ID获取总数
 - 很多逻辑可以利用自增ID主键最大值直接作为总数
   - 例：用户量冲亿活动要求实时统计，用户表上加上自增ID作为主键，只要取当时max(ID)就可以得到用户总数
-  ![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027144121631.png)
+  ![](/img/markdown-img-paste-20161027144121631.png)
 
 ### 可扩展性设计
 - 可扩展性
@@ -119,19 +119,19 @@ tags:
 - 适合数据需要定期过期的大表
 - 单个分区扫描迁移数据到历史库避免全表扫描IO开销
 - 删除单个分区非常高效  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027145305114.png)
+![](/img/markdown-img-paste-20161027145305114.png)
 
 ### 分区表与垂直分区
 - list分区
 - 适合将来可能要基于地区，类目等方式垂直拆分数据的方式
 - 清理节点上不要的数据非常高效  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027145442174.png)
+![](/img/markdown-img-paste-20161027145442174.png)
 
 ### 分区表与水平分区
 - hash分区
 - 适合将来需要做水平拆分的表
 - 清理节点上不要的数据非常高效  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027145650258.png)
+![](/img/markdown-img-paste-20161027145650258.png)
 
 ### MySQL分区表的局限
 - 主键或唯一键必须包含在分区字段内
@@ -154,7 +154,7 @@ tags:
 - 表的第一个timestamp类型字段在写入时如果不填值，会自动写入系统时间戳
 - 表的第一个timestamp类型字段每次记录发生更新后都会自动更新
 - 在update_time字段上建索引用于定时导出增量数据
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161027152222657.png)
+![](/img/markdown-img-paste-20161027152222657.png)
 
 #### Schema设计与前瞻性
 - 基于历史经验教训，预防和解决同类问题

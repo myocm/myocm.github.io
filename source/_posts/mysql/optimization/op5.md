@@ -75,7 +75,7 @@ SELECT col_a FROM t_a WHERE col_b>100;
 
 3. MySQL通常只能重写简单视图，复杂视图不能重写。
 
-![视图重写](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20171227110559653.png)
+![视图重写](/img/markdown-img-paste-20171227110559653.png)
 
 
 ## How to optimize view with View Rewrite for MySQL ?  

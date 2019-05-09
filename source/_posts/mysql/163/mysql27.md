@@ -13,16 +13,16 @@ tags:
 # MySQL主从复制
 
 ## 主从复制的模式
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107140710955.png)
+![](/img/markdown-img-paste-20161107140710955.png)
 
 ## 主从复制用途
 - 实时灾备，用于故障切换
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107140848670.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107140929722.png)
+![](/img/markdown-img-paste-20161107140848670.png)  
+![](/img/markdown-img-paste-20161107140929722.png)
 - 读写分离，提供查询服务
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107141007526.png)
+![](/img/markdown-img-paste-20161107141007526.png)
 - 备份，避免影响业务
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107141041288.png)
+![](/img/markdown-img-paste-20161107141041288.png)
 
 ## 主从复制部署
 ### 主从部署必要条件
@@ -37,7 +37,7 @@ tags:
 - 查看主从复制信息（show slave status\G）
 
 ## 主从复制原理
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-2016110714143736.png)
+![](/img/markdown-img-paste-2016110714143736.png)
 
 ## 主从复制存在的问题
 存在问题
@@ -53,8 +53,8 @@ tags:
 - 不保证从库应用完这个事务的binlog
 - 性能有一定的降低，响应时间会更长
 - 网络异常或从库宕机，会卡住主库，直到超时或从库恢复
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107143028630.png)  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107142225811.png)
+![](/img/markdown-img-paste-20161107143028630.png)  
+![](/img/markdown-img-paste-20161107142225811.png)
 
 ### 配置半同步复制
 - 安装semisync，只需要安装一次
@@ -79,7 +79,7 @@ set global rpl_semi_sync_slave_enabled = 1;
 ```
 
 ### 半同步复制状态
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161107142834533.png)
+![](/img/markdown-img-paste-20161107142834533.png)
 
 ## MySQL并行复制
 - 官方社区版5.6中新增

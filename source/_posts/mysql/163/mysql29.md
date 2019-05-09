@@ -29,14 +29,14 @@ tags:
 - CPU、网卡节电模式
 - 服务器numa设置
 - RAID缓存  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108133214912.png)  
+![](/img/markdown-img-paste-20161108133214912.png)  
 
 ### 磁盘调度策略 - Write Back
 - 数据写入cache即返回，数据异步地从cache刷入存储介质  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108133552224.png)
+![](/img/markdown-img-paste-20161108133552224.png)
 ### 磁盘调度策略 - Write Through
 - 数据同时写入cache和存储介质才返回写入成功  
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108133709267.png)
+![](/img/markdown-img-paste-20161108133709267.png)
 
 ### Write Back VS Write Through
 - Write Back 性能优于 Write Through
@@ -49,10 +49,10 @@ tags:
   - 常见的RAID类型有：RAID1、RAID0、RAID10和RAID5
 
 - RAID0 VS RAID1
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108134441183.png)
+![](/img/markdown-img-paste-20161108134441183.png)
 
 - RAID5 VS RAID10
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108134541895.png)
+![](/img/markdown-img-paste-20161108134541895.png)
 
 - RAID如何保证数据安全
   - BBU（`B`ackup `B`attery `U`nit）
@@ -134,7 +134,7 @@ N=2 - 每个事务提交的时候，把事务日志从缓存区写到日志文�
 #### 如何保证事务安全
 - innodb_flush_log_at_trx_commit 和 sync_binlog 都设置为 1
 - 事务要和binlog保持一致性
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108143340403.png)
+![](/img/markdown-img-paste-20161108143340403.png)
 
 - 串行有哪些问题
   - SAS盘一般每秒只能有150-200个Fsync
@@ -147,11 +147,11 @@ N=2 - 每个事务提交的时候，把事务日志从缓存区写到日志文�
 ※ Percona和MariaDB版本在MySQL5.5已经包含了这个优化
 
 - 性能提升
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108143836193.png)
+![](/img/markdown-img-paste-20161108143836193.png)
 
 #### InnoDB Redo log
 Write ahead log （WAL）
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108144005727.png)
+![](/img/markdown-img-paste-20161108144005727.png)
 
 - Redo log有哪些问题
   - 如果写入频繁导致Redo log 里对应的最老的数据脏页还没有刷新到磁盘，此时数据库将卡住，强制刷新脏页到磁盘
@@ -163,17 +163,17 @@ Write ahead log （WAL）
 
 #### Insert Buffer
 - 顺序读写 VS 随机读写
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108144453251.png)
+![](/img/markdown-img-paste-20161108144453251.png)
 
 - 随机请求性能远小于顺序请求
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108144549466.png)
+![](/img/markdown-img-paste-20161108144549466.png)
 
 ※ 将尽可能多的 随机请求合并为顺序请求才是提高数据库性能的关键
 
 - MySQL从5.1 版本开始支持Insert Buffer
 - MySQL5.5版本之后同时支持update和delete的Merge
 - Insert Buffer 只对二级索引且非唯一索引有效
-![](http://ocaw8wyva.bkt.clouddn.com/markdown-img-paste-20161108144820156.png)
+![](/img/markdown-img-paste-20161108144820156.png)
 
 ## 总结
 - 服务器配置要合理（内核版本、磁盘调度策略、RAID卡缓存）
