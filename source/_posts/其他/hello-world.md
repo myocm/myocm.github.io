@@ -94,7 +94,7 @@ deploy:
 
     指定部署类型为 git  
     指定库地址即可。
-    ![](http://i.imgur.com/BTRsLZn.png)
+    ![](/img/BTRsLZn.png)
   2. 执行部署命令
 ```
 hexo generate --deploy
