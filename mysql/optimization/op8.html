@@ -1,0 +1,547 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 8 数据库的约束规则与语义优化 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 8 数据库的约束规则与语义优化">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op8.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-05-20T06:12:19.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 8 数据库的约束规则与语义优化">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op8.html" title="MySQL优化 -- 8 数据库的约束规则与语义优化" itemprop="url">MySQL优化 -- 8 数据库的约束规则与语义优化</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2019-05-20T06:12:19.000Z" itemprop="datePublished"> 发表于 2019-05-20</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Data-Integrity-Constraint-数据完整性约束"><span class="toc-text">1. Data Integrity Constraint (数据完整性约束)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-What-is-Data-Integrity-Constraint"><span class="toc-text">1.1  What is Data Integrity Constraint ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-The-type-of-Data-Integrity-Constraint"><span class="toc-text">1.2  The type of Data Integrity Constraint</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Sematic-Optimization"><span class="toc-text">2. Sematic Optimization</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-What-is-Semantic-Optimization"><span class="toc-text">2.1 What is Semantic Optimization ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-How-to-do-Semantic-Optimization-for-MySQL"><span class="toc-text">2.2 How to do Semantic Optimization for MySQL ?</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<h2 id="1-Data-Integrity-Constraint-数据完整性约束"><a href="#1-Data-Integrity-Constraint-数据完整性约束" class="headerlink" title="1. Data Integrity Constraint (数据完整性约束)"></a>1. Data Integrity Constraint (数据完整性约束)</h2><h3 id="1-1-What-is-Data-Integrity-Constraint"><a href="#1-1-What-is-Data-Integrity-Constraint" class="headerlink" title="1.1  What is Data Integrity Constraint ?"></a>1.1  What is Data Integrity Constraint ?</h3><p>数据完整性（Data Integrity）:<br>是指数据的精确性（Accuracy） 和可靠性（Reliability）。</p>
+<p>作用:<br>1．防止用户向数据库中添加不合语义的数据。<br>2．利用基于DBMS的完整性控制机制来实现业务规则，易于定义，容易理解，而且可以降低应用程序的复杂性，提高应用程序的运行效率。同时，基于DBMS的完整性控制机制是集中管理的，因此比应用程序更容易实现数据库的完整性。</p>
+<h3 id="1-2-The-type-of-Data-Integrity-Constraint"><a href="#1-2-The-type-of-Data-Integrity-Constraint" class="headerlink" title="1.2  The type of Data Integrity Constraint"></a>1.2  The type of Data Integrity Constraint</h3><p>数据完整性分为四类：</p>
+<ol>
+<li><p>实体完整性（Entity Integrity）:自己</p>
+<blockquote>
+<p>一个关系对应现实世界中一个实体集。–ER模型<br>现实世界中的实体具有某种惟一性标识。–主键<br>主关键字是多个属性的组合，则所有主属性均不得取空值。–隐含的索引</p>
+</blockquote>
+</li>
+<li><p>域完整性（Domain Integrity）: 自己的局部</p>
+<blockquote>
+<p>保证数据库字段取值的合理性。<br>属性值应是域中的值，这是关系模式规定了的。<br>包括：<br>1 检查（CHECK）<br>2 默认值（DEFAULT）<br>3 不为空（NOT NULL）<br>4 可为空（NULL）等  </p>
+</blockquote>
+</li>
+</ol>
+<ol start="3">
+<li>参照完整性（Referential Integrity）: 自己与其他”实体”的关系<blockquote>
+<p>参照完整性是定义建立关系之间联系的主关键字与外部关键字引用的约束条件。<br>1 关系数据库中通常都包含多个存在相互联系的关系，关系与关系之间的联系是通过公共属性来实现的。<br>2 所谓公共属性，它是一个关系R(称为被参照关系或目标关系)的主关键字，同时又是另一关系K(称为参照关系)的外部关键字。如果参照关系K中外部关键字的取值，要么与被参照关系R中某元组主关键字的值相同，要么取空值，那么，在这两个关系间建立关联的主关键字和外部关键字引用，符合参照完整性规则要求。如果参照关系K的外部关键字也是其主关键字，根据实体完整性要求，主关键字不得取空值，因此，参照关系K外部关键字的取值实际上只能取相应被参照关系R中已经存在的主关键字值。</p>
+</blockquote>
+</li>
+</ol>
+<ol start="4">
+<li>用户自定义完整性（User-definedIntegrity）:用户增加的限制<blockquote>
+<p>用户定义完整性则是根据应用环境的要求和实际的需要，对某一具体应用所涉及的数据提出约束性条件。<br>这一约束机制一般不应由应用程序提供，而应有由关系模型提供定义并检验。<br>用户定义完整性主要包括字段有效性约束和记录有效性。</p>
+</blockquote>
+</li>
+</ol>
+<h2 id="2-Sematic-Optimization"><a href="#2-Sematic-Optimization" class="headerlink" title="2. Sematic Optimization"></a>2. Sematic Optimization</h2><h3 id="2-1-What-is-Semantic-Optimization"><a href="#2-1-What-is-Semantic-Optimization" class="headerlink" title="2.1 What is Semantic Optimization ?"></a>2.1 What is Semantic Optimization ?</h3><p>因为语义的原因，使得SQL可以被优化。包括两个基本概念：</p>
+<ol>
+<li><p>语义转换。因为完整性限制等的原因使得一个转换成立的情况称为语义转换。</p>
+</li>
+<li><p>语义优化。因为语义转换形成的优化称为语义优化。</p>
+<p> 语义转换其实是根据完整性约束等信息对“某特定语义”进行推理，进而得到的一种查询效率不同但结果相同的查询。</p>
+<p> 语义优化是从语义的角度对SQL进行优化，不是一种形式上的优化，所以其优化的范围，可能覆盖其他类型的优化范围。</p>
+</li>
+</ol>
+<p>语义优化常见的方式：</p>
+<ol>
+<li><p>连接消除（Join Elimination）：</p>
+<p> 对一些连接操作先不必评估代价，根据已知信息（主要依据完整性约束等，但不全是依据完整性约束）能推知结果或得到一个简化的操作。</p>
+<p> 例如：<br>   利用A、B两个基表做自然连接，创建一个视图V，如果在视图V上执行查询只涉及其中一个基表的信息，则对视图的查询完全可以转化为对某个基表的查询。</p>
+</li>
+<li><p>连接引入（Join Introduction）。</p>
+<p>   增加连接有助于原始关系变小或原关系的选择率降低。</p>
+</li>
+<li><p>谓词引入（Predicate Introduction）：</p>
+<p>   根据完整性约束等信息，引入新谓词，如引入基于索引的列，可能使得查询更快；</p>
+<p>   例如：<br>   一个表上，有“c1&lt;c2”的列约束，c2列上存在一个索引，查询语句中的WHERE条件有“c1&gt;200”，则可以推知“c2&gt;200”，</p>
+<p>   WHER条件变更为“c1&gt;200 AND c2&gt;200 AND c1&lt;c2”，</p>
+<p>   由此可以利用c2列上的索引，对查询语句进行优化；如果c2列上的索引的选择率很低，则优化效果会更高。</p>
+</li>
+<li><p>检测空回答集（Detecting the Empty Answer Set）：</p>
+<p> 查询语句中的谓词与约束相悖，可以推知条件结果为FALSE，也许最终的结果集能为空；</p>
+<p> 例如：<br> CHECK约束限定“score”列的范围是60到100，而一个查询条件是“score&lt;60”，则能立刻推知条件不成立。</p>
+</li>
+<li><p>排序优化（Order Optimizer）：</p>
+<p> ORDERBY操作通常由索引或排序（sort）完成；如果能够利用索引，则排序操作可省略；另外，结合分组等操作，考虑ORDERBY操作的优化。</p>
+</li>
+<li><p>唯一性使用（Exploiting Uniqueness）：</p>
+<p> 利用唯一性、索引等特点，检查是否存在不必要的DISTINCT操作</p>
+<p> 例如：<br> 在主键上执行DISTINCT操作，若有则可以把DISTINCT消除掉。</p>
+</li>
+</ol>
+<h3 id="2-2-How-to-do-Semantic-Optimization-for-MySQL"><a href="#2-2-How-to-do-Semantic-Optimization-for-MySQL" class="headerlink" title="2.2 How to do Semantic Optimization for MySQL ?"></a>2.2 How to do Semantic Optimization for MySQL ?</h3><p>示例1<br>语义优化中的检测空回答集技术，MySQL支持。<br><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">创建表，name列非空，对name列进行非空判断，并插入一些数据，具体命令如下：</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> TABLE student (name VARCHAR(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>, age INT);</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> student <span class="keyword">values</span> (<span class="string">'tom'</span>,<span class="number">19</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> student <span class="keyword">values</span> (<span class="string">'Marry'</span>,<span class="number">17</span>);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> student <span class="keyword">values</span> (<span class="string">'Jack'</span>,<span class="number">19</span>);</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">explain</span> EXTENDED <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> student <span class="keyword">WHERE</span> name <span class="keyword">IS</span> <span class="literal">NULL</span> <span class="keyword">AND</span> age&gt;<span class="number">18</span>;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+------------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra            |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+------------------+</span><br><span class="line">|  1 | SIMPLE      | NULL  | NULL       | NULL | NULL          | NULL | NULL    | NULL | NULL |     NULL | Impossible WHERE |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+------------------+</span><br><span class="line">1 row in set, 2 warnings (0.00 sec)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">mysql&gt; mysql warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Warning</span><br><span class="line">   Code: 1681</span><br><span class="line">Message:</span><br><span class="line">*************************** 2. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`student`</span>.<span class="symbol">`name`</span> <span class="keyword">AS</span> <span class="symbol">`name`</span>,<span class="symbol">`op`</span>.<span class="symbol">`student`</span>.<span class="symbol">`age`</span> <span class="keyword">AS</span> <span class="symbol">`age`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`student`</span> <span class="keyword">where</span> <span class="number">0</span></span><br><span class="line"><span class="number">2</span> rows <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">创建表，增加CHECK约束，MySQL不能利用CHECK约束做优化。创建表：</span><br><span class="line"><span class="keyword">CREATE</span> TABLE SC (score INT, CHECK(score&lt;<span class="number">100</span> <span class="keyword">AND</span> score&gt;<span class="number">60</span>));</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span>  <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> SC <span class="keyword">WHERE</span> score&lt;<span class="number">60</span>;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | SC    | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using where |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`sc`</span>.<span class="symbol">`score`</span> <span class="keyword">AS</span> <span class="symbol">`score`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`sc`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`sc`</span>.<span class="symbol">`score`</span> &lt; <span class="number">60</span>)</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>示例2<br>语义优化中的谓词引入技术，MySQL不支持。<br><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">创建表如下，列c2有唯一索引存在，并创建CHECK约束：</span><br><span class="line"><span class="keyword">CREATE</span> TABLE C (c1 INT, c2 INT <span class="keyword">UNIQUE</span>, CHECK(c1&lt;c2));</span><br><span class="line"></span><br><span class="line">在c1列上进行条件查询，查询执行计划:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> C <span class="keyword">WHERE</span> c1&gt;<span class="number">60</span>;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | C     | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using where |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c1`</span> <span class="keyword">AS</span> <span class="symbol">`c1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c2`</span> <span class="keyword">AS</span> <span class="symbol">`c2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`c`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c1`</span> &gt; <span class="number">60</span>)</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">创建表如下，列c2有唯一索引存在，并创建CHECK约束：</span><br><span class="line"><span class="keyword">CREATE</span> TABLE C (c1 INT, c2 INT <span class="keyword">UNIQUE</span>, CHECK(c1&lt;c2));</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> C <span class="keyword">WHERE</span> c1&gt;<span class="number">60</span> <span class="keyword">and</span> c2&gt;<span class="number">60</span>;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+------------------------------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                              |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+------------------------------------+</span><br><span class="line">|  1 | SIMPLE      | C     | NULL       | range | c2            | c2   | 5       | NULL |    1 |   100.00 | Using <span class="keyword">index</span> condition; Using where |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+------------------------------------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c1`</span> <span class="keyword">AS</span> <span class="symbol">`c1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c2`</span> <span class="keyword">AS</span> <span class="symbol">`c2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`c`</span> <span class="keyword">where</span> ((<span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c1`</span> &gt; <span class="number">60</span>) <span class="keyword">and</span> (<span class="symbol">`op`</span>.<span class="symbol">`c`</span>.<span class="symbol">`c2`</span> &gt; <span class="number">60</span>))</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>示例3<br>语义优化中的排序优化，MySQL支持，但条件较为苛刻。<br><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">创建表如下：</span><br><span class="line"><span class="keyword">CREATE</span> TABLE D (d1 INT, d2 INT <span class="keyword">UNIQUE</span>);</span><br><span class="line">对D进行自连接，连接条件使用有唯一索引的列，且连接条件的列与排序列相同。</span><br><span class="line"></span><br><span class="line">查询执行计划：</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> D F1, D F2 <span class="keyword">WHERE</span> F1.d2=F2.d2  <span class="keyword">ORDER</span> <span class="keyword">BY</span> F1.d2;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+----------+------+----------+-----------------------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref      | rows | filtered | Extra                       |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+----------+------+----------+-----------------------------+</span><br><span class="line">|  1 | SIMPLE      | F1    | NULL       | ALL  | d2            | NULL | NULL    | NULL     |    1 |   100.00 | Using where; Using filesort |</span><br><span class="line">|  1 | SIMPLE      | F2    | NULL       | ref  | d2            | d2   | 5       | op.F1.d2 |    1 |   100.00 | NULL                        |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+----------+------+----------+-----------------------------+</span><br><span class="line">2 rows in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`f1`</span>.<span class="symbol">`d1`</span> <span class="keyword">AS</span> <span class="symbol">`d1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`f1`</span>.<span class="symbol">`d2`</span> <span class="keyword">AS</span> <span class="symbol">`d2`</span>,<span class="symbol">`op`</span>.<span class="symbol">`f2`</span>.<span class="symbol">`d1`</span> <span class="keyword">AS</span> <span class="symbol">`d1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`f2`</span>.<span class="symbol">`d2`</span> <span class="keyword">AS</span> <span class="symbol">`d2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`d`</span> <span class="symbol">`f1`</span> <span class="keyword">join</span> <span class="symbol">`op`</span>.<span class="symbol">`d`</span> <span class="symbol">`f2`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`f2`</span>.<span class="symbol">`d2`</span> = <span class="symbol">`op`</span>.<span class="symbol">`f1`</span>.<span class="symbol">`d2`</span>) <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`f1`</span>.<span class="symbol">`d2`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> d2 <span class="keyword">FROM</span> D <span class="keyword">ORDER</span> <span class="keyword">BY</span> d2;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | D     | NULL       | <span class="keyword">index</span> | <span class="literal">NULL</span>          | d2   | <span class="number">5</span>       | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`d`</span>.<span class="symbol">`d2`</span> <span class="keyword">AS</span> <span class="symbol">`d2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`d`</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`d`</span>.<span class="symbol">`d2`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<p>示例4<br>语义优化技术中的唯一性使用，MySQL支持。<br><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">创建表：</span><br><span class="line"><span class="keyword">CREATE</span> TABLE <span class="built_in">E</span> (e1 INT, e2 INT <span class="keyword">UNIQUE</span>,e3 INT, <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span>(e1));</span><br><span class="line"></span><br><span class="line">插入数据：</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="built_in">E</span> <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="built_in">E</span> <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="built_in">E</span> <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="number">3</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="built_in">E</span> <span class="keyword">VALUES</span>(<span class="number">4</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="built_in">E</span> <span class="keyword">VALUES</span>(<span class="number">5</span>,<span class="number">5</span>,<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">在有主键的e1列上执行DISTINCT，查询执行计划如下：</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> e1 <span class="keyword">FROM</span> <span class="built_in">E</span>;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | E     | NULL       | <span class="keyword">index</span> | <span class="keyword">PRIMARY</span>,e2    | e2   | <span class="number">5</span>       | <span class="literal">NULL</span> |    <span class="number">5</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span>.<span class="symbol">`e1`</span> <span class="keyword">AS</span> <span class="symbol">`e1`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">在有唯一索引的e2列上执行<span class="keyword">DISTINCT</span>，查询执行计划如下：</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> e2 <span class="keyword">FROM</span> <span class="built_in">E</span>;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | E     | NULL       | <span class="keyword">index</span> | e2            | e2   | <span class="number">5</span>       | <span class="literal">NULL</span> |    <span class="number">5</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span>.<span class="symbol">`e2`</span> <span class="keyword">AS</span> <span class="symbol">`e2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">在普通的e3列上执行<span class="keyword">DISTINCT</span>，查询执行计划如下：</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> e3 <span class="keyword">FROM</span> <span class="built_in">E</span>;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra           |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span><br><span class="line">|  1 | SIMPLE      | E     | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    5 |   100.00 | Using temporary |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span><br><span class="line">1 row in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span>.<span class="symbol">`e3`</span> <span class="keyword">AS</span> <span class="symbol">`e3`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line"><span class="keyword">DISTINCT</span> e1:  <span class="keyword">Using</span> <span class="keyword">index</span></span><br><span class="line"><span class="keyword">DISTINCT</span> e2:  <span class="keyword">Using</span> <span class="keyword">index</span></span><br><span class="line"><span class="keyword">DISTINCT</span> e3:  <span class="keyword">Using</span> temporary</span><br></pre></td></tr></table></figure></p>
+<p>示例5<br>语义优化中的连接消除技术，MySQL不支持。<br><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">创建表和视图：</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> TABLE A (a1 INT, a2 INT);</span><br><span class="line"><span class="keyword">CREATE</span> TABLE B (b1 INT, b2 INT);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">VIEW</span> V <span class="keyword">AS</span> <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> A, B;</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> A <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> A <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="number">2</span>);</span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> A <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>);</span><br><span class="line"></span><br><span class="line">对视图进行查询，只查询视图的某个基表的列，查询执行计划如下：</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> a1, a2 <span class="keyword">FROM</span> V <span class="keyword">WHERE</span> a1&gt;<span class="number">2</span>;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                              |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">|  1 | SIMPLE      | b     | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    1 |   100.00 | NULL                                               |</span><br><span class="line">|  1 | SIMPLE      | a     | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    3 |    33.33 | Using where; Using join buffer (Block Nested Loop) |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">2 rows in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`a`</span>.<span class="symbol">`a1`</span> <span class="keyword">AS</span> <span class="symbol">`a1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`a`</span>.<span class="symbol">`a2`</span> <span class="keyword">AS</span> <span class="symbol">`a2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`a`</span> <span class="keyword">join</span> <span class="symbol">`op`</span>.<span class="symbol">`b`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`a`</span>.<span class="symbol">`a1`</span> &gt; <span class="number">2</span>)</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op8.html" data-title="MySQL优化 -- 8 数据库的约束规则与语义优化 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/mysql/optimization/op7.html" title="MySQL优化 -- 7 外连接消除、嵌套连接消除与连接消除">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 7 外连接消除、嵌套连接消除与连接消除
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op8.html" data-title="MySQL优化 -- 8 数据库的约束规则与语义优化" data-url="http://mydba.xyz/mysql/optimization/op8.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Data-Integrity-Constraint-数据完整性约束"><span class="toc-text">1. Data Integrity Constraint (数据完整性约束)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-What-is-Data-Integrity-Constraint"><span class="toc-text">1.1  What is Data Integrity Constraint ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-The-type-of-Data-Integrity-Constraint"><span class="toc-text">1.2  The type of Data Integrity Constraint</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Sematic-Optimization"><span class="toc-text">2. Sematic Optimization</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-What-is-Semantic-Optimization"><span class="toc-text">2.1 What is Semantic Optimization ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-How-to-do-Semantic-Optimization-for-MySQL"><span class="toc-text">2.2 How to do Semantic Optimization for MySQL ?</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>41</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://mydba.xyz/mysql/optimization/op8.html</loc>
+    
+    <lastmod>2019-05-20T06:12:19.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://mydba.xyz/%E5%85%B6%E4%BB%96/hello-world.html</loc>
     
     <lastmod>2019-05-09T10:07:28.104Z</lastmod>
