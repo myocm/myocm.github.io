@@ -1,0 +1,564 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta name="baidu-site-verification" content="ls1TMwmUrj">
+  <meta charset="UTF-8">
+  
+    <title>MySQL优化 -- 9 非SPJ的优化 | MyDBA学习笔记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="冬日暖阳">
+    
+
+    
+    <meta name="description" content="MySQL优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL优化 -- 9 非SPJ的优化">
+<meta property="og:url" content="http://mydba.xyz/mysql/optimization/op9.html">
+<meta property="og:site_name" content="MyDBA学习笔记">
+<meta property="og:description" content="MySQL优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://mydba.xyz/img/op9-e1179425.png">
+<meta property="og:updated_time" content="2019-05-21T09:03:02.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL优化 -- 9 非SPJ的优化">
+<meta name="twitter:description" content="MySQL优化">
+<meta name="twitter:image" content="http://mydba.xyz/img/op9-e1179425.png">
+<meta name="twitter:creator" content="@sdy0917">
+
+    
+    <link rel="alternative" href="/atom.xml" title="MyDBA学习笔记" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/jacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/jacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="MyDBA学习笔记" title="MyDBA学习笔记"></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="MyDBA学习笔记">MyDBA学习笔记</a></h1>
+				<h2 class="blog-motto"></h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+ 					
+						<form class="search" action="http://znsv.baidu.com/customer_search/api/js" target="_blank">
+							<label>Search</label>
+						<input name="s" type="hidden" value="16079030559689052000"><input type="text" name="q" size="30" placeholder="搜索"><br>
+						</form>
+					
+					</li>
+				</ul>
+			</ul></nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope="" itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/mysql/optimization/op9.html" title="MySQL优化 -- 9 非SPJ的优化" itemprop="url">MySQL优化 -- 9 非SPJ的优化</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="冬日暖阳" target="_blank" itemprop="author">冬日暖阳</a>
+		
+  </p><p class="article-time">
+    <time datetime="2019-05-21T09:03:02.000Z" itemprop="datePublished"> 发表于 2019-05-21</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-SPJ-and-Non-SPJ"><span class="toc-text">1. SPJ and Non SPJ</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Non-SPJ-optimization"><span class="toc-text">2. Non SPJ optimization</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Why-do-Non-SPJ-Optimization"><span class="toc-text">2.1 Why do Non SPJ Optimization ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-GROPUP-BY-Optimization"><span class="toc-text">2.2 GROPUP BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-ORDER-BY-Optimization"><span class="toc-text">2.3 ORDER BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-DISTINCT-Optimization"><span class="toc-text">2.4 DISTINCT Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Non-SPJ-optimization-of-MySQL"><span class="toc-text">3. Non SPJ optimization of MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-GROPUP-BY-Optimization"><span class="toc-text">3.1 GROPUP BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-ORDER-BY-Optimization"><span class="toc-text">3.2 ORDER BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-DISTINCT-Optimization"><span class="toc-text">3.3 DISTINCT Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-LIMIT-Optimization"><span class="toc-text">3.4 LIMIT Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-SET-Optimization"><span class="toc-text">3.5 SET Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-6-Other-Optimization"><span class="toc-text">3.6 Other Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Logical-query-optimization-and-Heuristics-Rule"><span class="toc-text">4. Logical query optimization and Heuristics Rule</span></a></li></ol>
+		
+		</div>
+		
+		<h2 id="1-SPJ-and-Non-SPJ"><a href="#1-SPJ-and-Non-SPJ" class="headerlink" title="1. SPJ and Non SPJ"></a>1. SPJ and Non SPJ</h2><p><img src="/img/op9-e1179425.png" alt=""></p>
+<h2 id="2-Non-SPJ-optimization"><a href="#2-Non-SPJ-optimization" class="headerlink" title="2. Non SPJ optimization"></a>2. Non SPJ optimization</h2><h3 id="2-1-Why-do-Non-SPJ-Optimization"><a href="#2-1-Why-do-Non-SPJ-Optimization" class="headerlink" title="2.1 Why do Non SPJ Optimization ?"></a>2.1 Why do Non SPJ Optimization ?</h3><p>为什么要做非 SPJ 优化 ?<br>历史:<br>早期的关系数据库系如 System-R ，对 GROUPBY 和聚集等操作一般都放在其所在的查询的最后进行处理，即在执行完所有的连接和选择操作之后再执行 GROUPBY 和聚集。</p>
+<p>优缺点 :<br>   处理方式比较简单，编码容易，但执行效率会比较低。  </p>
+<h3 id="2-2-GROPUP-BY-Optimization"><a href="#2-2-GROPUP-BY-Optimization" class="headerlink" title="2.2 GROPUP BY Optimization"></a>2.2 GROPUP BY Optimization</h3><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT COUNT(s.classID) as StudentNum, s.classID <span class="keyword">FROM</span> STUDENT AS s, CLASS AS c</span><br><span class="line">WHERE S.<span class="attribute">ID</span>=c.SID</span><br><span class="line">GROUP BY s.classID</span><br></pre></td></tr></table></figure>
+<p>优化方式:<br>分组转换技术:<br>即对分组操作、聚集操作与连接操作的<code>位置进行交换</code></p>
+<p>常见分组转换技术 :  </p>
+<ol>
+<li><p>分组操作下移:GROUPBY操作可能较大幅度减小关系元组的个数，如果能够 对某个关系先进行分组操作，然后再进行表之间的连接，很可能提高连接效率。这种优化方式是<code>把分组操作提前执行</code>。下移的含义，是在查询树上，让分组操作尽量靠近叶子结点，使得分组操作的结点低于一些选择操作。</p>
+</li>
+<li><p>分组操作上移:如果连接操作能够过滤掉大部分元组，则先进行连接后进行 GROUPBY 操作，可能提高分组操作的效率。这种优化方式是<code>把分组操作置后执行</code>。上移的含义，和下移正好相反。<br>对于带有 GROUPBY 等操作的非 SPJ 格式的 SQL 语句，在本节之前提及的技术都 适用，只是结合了 GROUPBY 操作的语义进行分组操作。因为 GROUPBY 操作下移 或上移均不能保证重写后的查询效率一定更好，所以，要在查询优化器中采用<code>基于代价的方式来估算某几种路径的优劣</code>。</p>
+</li>
+</ol>
+<h3 id="2-3-ORDER-BY-Optimization"><a href="#2-3-ORDER-BY-Optimization" class="headerlink" title="2.3 ORDER BY Optimization"></a>2.3 ORDER BY Optimization</h3><p>常见 ORDER BY 优化技术 :  </p>
+<ol>
+<li><code>排序消除( Order By Elimination ， OBYE )</code><br>优化器在生成执行计划前，将语句中没有必要的排序操作消除(如利用索<br>引)，避免在执行计划中出现排序操作或由排序导致的操作(如在索引列上排<br>序，可以利用索引消除排序操作)。</li>
+<li><code>排序下推( Sort push down )</code><br><code>把排序操作尽量下推到基表中</code>，有序的基表进行连接后的结果符合排序的语<br>义，这样能避免在最终的大的连接结果集上执行排序操作。</li>
+</ol>
+<h3 id="2-4-DISTINCT-Optimization"><a href="#2-4-DISTINCT-Optimization" class="headerlink" title="2.4 DISTINCT Optimization"></a>2.4 DISTINCT Optimization</h3><p>常见 DISTINCT 优化技术 :</p>
+<ol>
+<li><code>DISTINCT 消除( Distinct Elimination )</code><br>如果表中存在主键、唯一约束、索引等，则可以消除查询语句中的 DISTINCT (这种优化方式，在语义优化中也涉及，本质上是语义优化研究的范畴)。</li>
+<li><code>DISTINCT 推入( Distinct Push Down )</code><br>生成含 DISTINCT 的反半连接查询执行计划时，先进行反半连接再进行 DIS TICT 操作;也许先执行 DISTICT 操作然后再执行反半连接，可能更优;这是利 用连接语义上确保唯一功能特性进行 DISTINCT 的优化。</li>
+<li><code>DISTINCT 迁移( Distinct Placement )</code><br>对连接操作的结果执行 DISTINCT ，可能把 DISTINCT 移到一个子查询中优 先进行(有的书籍把这项技术称为“ DISTINCT 配置”)。</li>
+</ol>
+<h2 id="3-Non-SPJ-optimization-of-MySQL"><a href="#3-Non-SPJ-optimization-of-MySQL" class="headerlink" title="3. Non SPJ optimization of MySQL"></a>3. Non SPJ optimization of MySQL</h2><h3 id="3-1-GROPUP-BY-Optimization"><a href="#3-1-GROPUP-BY-Optimization" class="headerlink" title="3.1 GROPUP BY Optimization"></a>3.1 GROPUP BY Optimization</h3><p><code>MySQL 的 GROUP BY 优化技术:</code><br>MySQL 对于 GROUPBY 的处理，通常采用的方式是扫描整个表、创建一个临时表 用以执行分组操作。<br>查询执行计划中出现“ Using temporary” 字样表示 MySQL 采用了常规的处理方式。<br><code>MySQL 不支持分组转换技术</code>。<br><code>对于 GROUPBY 的优化，则尽量利用索引</code>。</p>
+<p>利用索引的条件是:分组子句中的列对象源自同一个 btree 索引(不支持利用 Hash 索引进行优化)的全部或前缀部分的部分有序的键(分组使用的索引列与 索引建立的顺序不匹配则不能使用索引)。<br>主要的方式有 :  </p>
+<ol>
+<li>Loose Index Scan :<br>直接用索引完成分组操作中对分组列的检索，不必考虑索引的全部键满足 WHER E 子句，只要有部分匹配 WHERE 中的列对象即可( loose ，利用索引中部分列为“松散”)</li>
+<li>Tight Index Scan :<br>索引中的全部键与 WHERE 子句中的列对象匹配( tight ，利用索引中的全部列为“严密”)</li>
+</ol>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> TABLE t_god (a INT, b INT, c INT, d INT, <span class="built_in">e</span> INT);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> t_god_idx_1 <span class="keyword">ON</span> t_god (a,b,c);</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> t_god_idx_2 <span class="keyword">ON</span> t_god (d);</span><br><span class="line"></span><br><span class="line">示例 1 :索引列上执行 GROUPBY ，支持 GROUPBY 优化(没有使用“ Using file sort” 类似的操作进行排序):</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span>  <span class="keyword">SELECT</span> a <span class="keyword">FROM</span> t_god <span class="keyword">GROUP</span> <span class="keyword">BY</span> a;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key         | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | t_god | NULL       | <span class="keyword">index</span> | t_god_idx_1   | t_god_idx_1 | <span class="number">15</span>      | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span> <span class="keyword">AS</span> <span class="symbol">`a`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span> <span class="keyword">group</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">示例 <span class="number">2</span> :索引列上执行 ORDERBY ， MySQL 支持 ORDERBY 优化:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> a <span class="keyword">FROM</span> t_god <span class="keyword">ORDER</span> <span class="keyword">BY</span> a;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key         | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | t_god | NULL       | <span class="keyword">index</span> | <span class="literal">NULL</span>          | t_god_idx_1 | <span class="number">15</span>      | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span> <span class="keyword">AS</span> <span class="symbol">`a`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">示例<span class="number">3</span> 索引列上执行ORDERBY、GROUPBY，MySQL支持ORDERBY优化也支持G ROUPBY 优化</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> a <span class="keyword">FROM</span> t_god <span class="keyword">GROUP</span> <span class="keyword">BY</span> a <span class="keyword">ORDER</span> <span class="keyword">BY</span> a;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key         | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | t_god | NULL       | <span class="keyword">index</span> | t_god_idx_1   | t_god_idx_1 | <span class="number">15</span>      | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span> <span class="keyword">AS</span> <span class="symbol">`a`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span> <span class="keyword">group</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">示例<span class="number">4</span> 带有聚集操作，索引列上执行GROUPBY，MySQL支持GROUPBY优化:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> a, <span class="built_in">MIN</span>(b) <span class="keyword">FROM</span> t_god <span class="keyword">WHERE</span> c&gt;<span class="number">2</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span> a;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+--------------------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key         | key_len | ref  | rows | filtered | Extra                    |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+--------------------------+</span><br><span class="line">|  1 | SIMPLE      | t_god | NULL       | <span class="keyword">index</span> | t_god_idx_1   | t_god_idx_1 | <span class="number">15</span>      | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">where</span>; Using <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+-------------+---------+------+------+----------+--------------------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span> <span class="keyword">AS</span> <span class="symbol">`a`</span>,<span class="built_in">min</span>(<span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`b`</span>) <span class="keyword">AS</span> <span class="symbol">`MIN(b)`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`c`</span> &gt; <span class="number">2</span>) <span class="keyword">group</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_god`</span>.<span class="symbol">`a`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-ORDER-BY-Optimization"><a href="#3-2-ORDER-BY-Optimization" class="headerlink" title="3.2 ORDER BY Optimization"></a>3.2 ORDER BY Optimization</h3><p><code>MySQL 的 ORDER BY 优化技术:</code></p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">创建表，命令如下:</span><br><span class="line"><span class="keyword">CREATE</span> TABLE t_o1 (a1 INT <span class="keyword">UNIQUE</span>, b1 INT);</span><br><span class="line"><span class="keyword">CREATE</span> TABLE t_o2 (a2 INT <span class="keyword">UNIQUE</span>, b2 INT);</span><br><span class="line"></span><br><span class="line">示例1 在索引列上进行排序操作，MySQL支持利用索引进行排序优化。</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> a1 <span class="keyword">FROM</span> t_o1 <span class="keyword">ORDER</span> <span class="keyword">BY</span> a1;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | t_o1  | NULL       | <span class="keyword">index</span> | <span class="literal">NULL</span>          | a1   | <span class="number">5</span>       | <span class="literal">NULL</span> |    <span class="number">1</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`a1`</span> <span class="keyword">AS</span> <span class="symbol">`a1`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`a1`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">示例<span class="number">2</span> 排序下推，MySQL不支持。在非索引列上执行连接，然后排序:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span>  <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> t_o1, t_o2 <span class="keyword">WHERE</span> b1=b2 <span class="keyword">ORDER</span> <span class="keyword">BY</span> b1;</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra                                              |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">|  1 | SIMPLE      | t_o1  | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using temporary; Using filesort                    |</span><br><span class="line">|  1 | SIMPLE      | t_o2  | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    1 |   100.00 | Using where; Using join buffer (Block Nested Loop) |</span><br><span class="line">+----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+----------------------------------------------------+</span><br><span class="line">2 rows in set, 1 warning (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; show warnings \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: 1003</span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`a1`</span> <span class="keyword">AS</span> <span class="symbol">`a1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`b1`</span> <span class="keyword">AS</span> <span class="symbol">`b1`</span>,<span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span>.<span class="symbol">`a2`</span> <span class="keyword">AS</span> <span class="symbol">`a2`</span>,<span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span>.<span class="symbol">`b2`</span> <span class="keyword">AS</span> <span class="symbol">`b2`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span> <span class="keyword">join</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span>.<span class="symbol">`b2`</span> = <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`b1`</span>) <span class="keyword">order</span> <span class="keyword">by</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`b1`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h3 id="3-3-DISTINCT-Optimization"><a href="#3-3-DISTINCT-Optimization" class="headerlink" title="3.3 DISTINCT Optimization"></a>3.3 DISTINCT Optimization</h3><figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">示例 1 MySQL 支持对于 DISTINCT 消除的优化技术。</span><br><span class="line">在有主键的 e1 列上执行 DISTINCT ，查询执行计划如下:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span> <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> e1 <span class="keyword">FROM</span> <span class="built_in">E</span>;</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line">|  1 | SIMPLE      | E     | NULL       | <span class="keyword">index</span> | <span class="keyword">PRIMARY</span>,e2    | e2   | <span class="number">5</span>       | <span class="literal">NULL</span> |    <span class="number">5</span> |   <span class="number">100.00</span> | <span class="keyword">Using</span> <span class="keyword">index</span> |</span><br><span class="line">+----+-------------+-------+------------+-------+---------------+------+---------+------+------+----------+-------------+</span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span>.<span class="symbol">`e1`</span> <span class="keyword">AS</span> <span class="symbol">`e1`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`e`</span></span><br><span class="line"><span class="number">1</span> row <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">示例 <span class="number">2</span> MySQL 不支持对于 <span class="keyword">DISTINCT</span> 推入的优化技术。</span><br><span class="line">a2 列是唯一列，又处于反半连接的语义( <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> )，完全可以把 DISTIN CT 下推到表 t_o2 中先执行，然后再执行反半连接操作:</span><br><span class="line">mysql&gt; <span class="keyword">EXPLAIN</span>  <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> b1 <span class="keyword">FROM</span> t_o1 <span class="keyword">WHERE</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> (<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> t_o2 <span class="keyword">WHERE</span> b1=a2);</span><br><span class="line">+----+--------------------+-------+------------+------+---------------+------+---------+------------+------+----------+------------------------------+</span><br><span class="line">| id | select_type        | table | partitions | type | possible_keys | key  | key_len | ref        | rows | filtered | Extra                        |</span><br><span class="line">+----+--------------------+-------+------------+------+---------------+------+---------+------------+------+----------+------------------------------+</span><br><span class="line">|  1 | PRIMARY            | t_o1  | NULL       | ALL  | NULL          | NULL | NULL    | NULL       |    1 |   100.00 | Using where; Using temporary |</span><br><span class="line">|  2 | DEPENDENT SUBQUERY | t_o2  | NULL       | ref  | a2            | a2   | 5       | op.t_o1.b1 |    1 |   100.00 | Using <span class="keyword">index</span>                  |</span><br><span class="line">+----+--------------------+-------+------------+------+---------------+------+---------+------------+------+----------+------------------------------+</span><br><span class="line"><span class="number">2</span> rows <span class="keyword">in</span> <span class="keyword">set</span>, <span class="number">2</span> warnings (<span class="number">0.00</span> sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; <span class="keyword">show</span> warnings \G</span><br><span class="line">*************************** <span class="number">1.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1276</span></span><br><span class="line">Message:</span><br><span class="line">*************************** <span class="number">2.</span> row ***************************</span><br><span class="line">  Level: Note</span><br><span class="line">   Code: <span class="number">1003</span></span><br><span class="line">Message: <span class="comment">/* select#1 */</span> <span class="keyword">select</span> <span class="keyword">distinct</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`b1`</span> <span class="keyword">AS</span> <span class="symbol">`b1`</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span> <span class="keyword">where</span> (<span class="keyword">not</span>(<span class="keyword">exists</span>(<span class="comment">/* select#2 */</span> <span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> <span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span> <span class="keyword">where</span> (<span class="symbol">`op`</span>.<span class="symbol">`t_o1`</span>.<span class="symbol">`b1`</span> = <span class="symbol">`op`</span>.<span class="symbol">`t_o2`</span>.<span class="symbol">`a2`</span>))))</span><br><span class="line"><span class="number">2</span> rows <span class="keyword">in</span> <span class="keyword">set</span> (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure>
+<h3 id="3-4-LIMIT-Optimization"><a href="#3-4-LIMIT-Optimization" class="headerlink" title="3.4 LIMIT Optimization"></a>3.4 LIMIT Optimization</h3><p>MySQL 的 LIMIT 优化技术 :</p>
+<ol>
+<li>LIMIT 对单表扫描的影响:如果索引扫描可用且花费低于全表扫描，则用索引<br>扫描实现 LIMIT ( LIMIT 取很少量的行，否则优化器更倾向于使用全表扫描)。</li>
+</ol>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">create table t3<span class="params">(a1 int , a2 int , a3 int, key id3(a3)</span>) ;</span><br><span class="line">insert into t3 values<span class="params">(1, 2, 11)</span> ;</span><br><span class="line">insert into t3 values<span class="params">(2, 3, 12)</span> ;</span><br><span class="line">insert into t3 values<span class="params">(3, 4, 13)</span> ;</span><br><span class="line">mysql&gt; explain select * from t3 where a3 &gt; 10 ;</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-------------</span>+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-------------</span>+</span><br><span class="line">|  1 | SIMPLE      | t3    | NULL       | ALL  | id3           | NULL | NULL    | NULL |    3 |   100.00 | Using where |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-------------</span>+</span><br><span class="line">1 row in <span class="keyword">set</span>, 1 warning <span class="params">(0.00 sec)</span></span><br><span class="line"></span><br><span class="line">mysql&gt; explain select * from t3 where a3 &gt; 10 limit 1;</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">-------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-----------------------</span>+</span><br><span class="line">| id | select_type | table | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                 |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">-------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-----------------------</span>+</span><br><span class="line">|  1 | SIMPLE      | t3    | NULL       | range | id3           | id3  | 5       | NULL |    3 |   100.00 | Using index condition |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">-------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">-----------------------</span>+</span><br><span class="line">1 row in <span class="keyword">set</span>, 1 warning <span class="params">(0.00 sec)</span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>LIMIT 对排序的影响:<br>如果 LIMIT 和 ORDERBY 子句协同使用，当取到 LIMIT<br>设定个数的有序元组数后，后续的排序操作将不再进行。</p>
+</li>
+<li><p>LIMIT 对去重的影响:<br>如果 LIMIT 和 DISTINCT 子句协同使用，当取到 LIMIT 设定个数的唯一的元组数后，后续的去重操作将不再进行。</p>
+</li>
+<li><p>LIMIT 受分组的影响:<br>如果 LIMIT 和 GROUPBY 子句协同使用， GROUPBY 按索引有序计算每个组的总数的过程中， LIMIT 操作不必计数直到下一个分组开始 计算。</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">GROUP    LIMIT</span><br><span class="line"> <span class="number">1</span>----    +<span class="number">1</span></span><br><span class="line"> <span class="number">1</span></span><br><span class="line"> <span class="number">1</span></span><br><span class="line"> <span class="number">2</span>----    +<span class="number">1</span></span><br><span class="line"> <span class="number">2</span></span><br><span class="line"> <span class="number">3</span>----    +<span class="number">1</span></span><br><span class="line"> ...      ...</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>LIMIT 0 :<br>直接返回空结果集。</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; explain select * from t3 where a1 &gt; 10 order by a3 limit 0;</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">------------</span>+</span><br><span class="line">| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra      |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">------------</span>+</span><br><span class="line">|  1 | SIMPLE      | NULL  | NULL       | NULL | NULL          | NULL | NULL    | NULL | NULL |     NULL | Zero limit |</span><br><span class="line">+<span class="params">----</span>+<span class="params">-------------</span>+<span class="params">-------</span>+<span class="params">------------</span>+<span class="params">------</span>+<span class="params">---------------</span>+<span class="params">------</span>+<span class="params">---------</span>+<span class="params">------</span>+<span class="params">------</span>+<span class="params">----------</span>+<span class="params">------------</span>+</span><br><span class="line">1 row in <span class="keyword">set</span>, 1 warning <span class="params">(0.00 sec)</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>MySQL 支持对不带 HAVING 子句的 LIMIT 进行优化。</p>
+</li>
+</ol>
+<h3 id="3-5-SET-Optimization"><a href="#3-5-SET-Optimization" class="headerlink" title="3.5 SET Optimization"></a>3.5 SET Optimization</h3><p>MySQL 的集合操作优化技术:  </p>
+<ol>
+<li><p>MySQL 语法:  </p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> ...</span><br><span class="line"><span class="keyword">UNION</span> [<span class="keyword">ALL</span> | <span class="keyword">DISTINCT</span>] <span class="keyword">SELECT</span> ...</span><br><span class="line">[<span class="keyword">UNION</span> [<span class="keyword">ALL</span> | <span class="keyword">DISTINCT</span>] <span class="keyword">SELECT</span> ...]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查询重写规则: OR重写并集规则 —MySQL不支持</p>
+</li>
+<li>需要引入代价估算的去评估重写后的代价，比较复杂</li>
+</ol>
+<p>ORDER BY 子句去除<br><figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">create table tk1 (a int, b int , c int);</span><br><span class="line">create table tk2 (a int, b int , c int);</span><br><span class="line"></span><br><span class="line">EXPLAIN</span><br><span class="line">(SELECT c FROM tk1 WHERE c&lt;<span class="number">21</span> ORDER BY c)</span><br><span class="line">UNION</span><br><span class="line">(SELECT c FROM tk2 WHERE c&lt;<span class="number">11</span> ORDER BY c);</span><br><span class="line"></span><br><span class="line">mysql&gt; EXPLAIN</span><br><span class="line">    -&gt; (SELECT c FROM tk1 WHERE c&lt;<span class="number">21</span> ORDER BY c)</span><br><span class="line">    -&gt; UNION</span><br><span class="line">    -&gt; (SELECT c FROM tk2 WHERE c&lt;<span class="number">11</span> ORDER BY c);</span><br><span class="line">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span><br><span class="line">| <span class="type">id</span> | <span class="type">select_type</span>  | <span class="type">table</span>      | <span class="type">partitions</span> | <span class="type">type</span> | <span class="type">possible_keys</span> | <span class="type">key</span>  | <span class="type">key_len</span> | <span class="type">ref</span>  | <span class="type">rows</span> | <span class="type">filtered</span> | <span class="type">Extra</span>           |<span class="type"></span></span><br><span class="line"><span class="type">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span></span><br><span class="line"><span class="type">|  1</span> | <span class="type">PRIMARY</span>      | <span class="type">tk1</span>        | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> |    <span class="type">1</span> |   <span class="type">100</span><span class="number">.00</span> | <span class="type">Using</span> <span class="keyword">where</span>     |<span class="type"></span></span><br><span class="line"><span class="type">|  2</span> | <span class="type">UNION</span>        | <span class="type">tk2</span>        | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> |    <span class="type">1</span> |   <span class="type">100</span><span class="number">.00</span> | <span class="type">Using</span> <span class="keyword">where</span>     |<span class="type"></span></span><br><span class="line"><span class="type">| NULL</span> | <span class="type">UNION</span> RESULT | <span class="type">&lt;union1</span>,<span class="number">2</span>&gt; | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> | <span class="type">NULL</span> |     <span class="type">NULL</span> | <span class="type">Using</span> temporary |<span class="type"></span></span><br><span class="line"><span class="type">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------+</span></span><br><span class="line"><span class="type"></span></span><br><span class="line"><span class="type">mysql</span>&gt; EXPLAIN</span><br><span class="line">    -&gt; (SELECT c FROM tk1 WHERE c&lt;<span class="number">21</span> ORDER BY c limit <span class="number">3</span>)</span><br><span class="line">    -&gt; UNION</span><br><span class="line">    -&gt; (SELECT c FROM tk2 WHERE c&lt;<span class="number">11</span> ORDER BY c limit <span class="number">5</span>);</span><br><span class="line">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------------------+</span><br><span class="line">| <span class="type">id</span> | <span class="type">select_type</span>  | <span class="type">table</span>      | <span class="type">partitions</span> | <span class="type">type</span> | <span class="type">possible_keys</span> | <span class="type">key</span>  | <span class="type">key_len</span> | <span class="type">ref</span>  | <span class="type">rows</span> | <span class="type">filtered</span> | <span class="type">Extra</span>                       |<span class="type"></span></span><br><span class="line"><span class="type">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------------------+</span></span><br><span class="line"><span class="type">|  1</span> | <span class="type">PRIMARY</span>      | <span class="type">tk1</span>        | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> |    <span class="type">1</span> |   <span class="type">100</span><span class="number">.00</span> | <span class="type">Using</span> <span class="keyword">where</span>; Using filesort |<span class="type"></span></span><br><span class="line"><span class="type">|  2</span> | <span class="type">UNION</span>        | <span class="type">tk2</span>        | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> |    <span class="type">1</span> |   <span class="type">100</span><span class="number">.00</span> | <span class="type">Using</span> <span class="keyword">where</span>; Using filesort |<span class="type"></span></span><br><span class="line"><span class="type">| NULL</span> | <span class="type">UNION</span> RESULT | <span class="type">&lt;union1</span>,<span class="number">2</span>&gt; | <span class="type">NULL</span>       | <span class="type">ALL</span>  | <span class="type">NULL</span>          | <span class="type">NULL</span> | <span class="type">NULL</span>    | <span class="type">NULL</span> | <span class="type">NULL</span> |     <span class="type">NULL</span> | <span class="type">Using</span> temporary             |<span class="type"></span></span><br><span class="line"><span class="type">+----+--------------+------------+------------+------+---------------+------+---------+------+------+----------+-----------------------------+</span></span><br><span class="line"><span class="type">3</span> rows <span class="built_in">in</span> <span class="built_in">set</span>, <span class="number">1</span> warning (<span class="number">0.00</span> sec)</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-6-Other-Optimization"><a href="#3-6-Other-Optimization" class="headerlink" title="3.6 Other Optimization"></a>3.6 Other Optimization</h3><p>MySQL 的其他优化技术:  </p>
+<ol>
+<li>SELECT DISTINCT a FROM t1 LIMIT 1;</li>
+<li>SELECT DISTICT MAX(a) FROM t1;</li>
+</ol>
+<h2 id="4-Logical-query-optimization-and-Heuristics-Rule"><a href="#4-Logical-query-optimization-and-Heuristics-Rule" class="headerlink" title="4. Logical query optimization and Heuristics Rule"></a>4. Logical query optimization and Heuristics Rule</h2><ol>
+<li>Logical query optimization—relational algebra, 数学规则<br>理论依据,公式推导(定理)</li>
+<li>Heuristics Rule— 经验规则<br>实践中检验得出的经验 ( 公理 )</li>
+</ol>
+<p>示例 : 常见的一些启发式规则</p>
+<ol>
+<li>嵌套连接消除 : 如果都是内连接 , 则可以把表示嵌套关系的括号去掉 Ajoin(BjoinC) == AjoinBjoinC</li>
+<li>选择操作下推</li>
+<li>投影操作下推</li>
+</ol>
+<p>示例 : 常见的一些经验规则</p>
+<ol>
+<li>在索引键上执行排序操作 , 通常利用索引的有序性按序读取数据而不 进行排序</li>
+<li>选择率低于 <code>10%</code> 时 , 利用索引的效果通常比读表数据的效果好</li>
+<li>当表的数据量较少时,全表扫描可能优于其它方式(如利用索引的<br>方式)</li>
+</ol>
+<hr>
+<p>Good luck!<br>冬日暖阳</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/MySQL/">MySQL</a>
+</div>
+
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://mydba.xyz/mysql/optimization/op9.html" data-title="MySQL优化 -- 9 非SPJ的优化 | MyDBA学习笔记" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/mysql/optimization/op8.html" title="MySQL优化 -- 8 数据库的约束规则与语义优化">
+ <strong>下一篇：</strong><br> 
+ <span>MySQL优化 -- 8 数据库的约束规则与语义优化
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="mysql/optimization/op9.html" data-title="MySQL优化 -- 9 非SPJ的优化" data-url="http://mydba.xyz/mysql/optimization/op9.html"></div>
+</section>
+
+
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-SPJ-and-Non-SPJ"><span class="toc-text">1. SPJ and Non SPJ</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Non-SPJ-optimization"><span class="toc-text">2. Non SPJ optimization</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Why-do-Non-SPJ-Optimization"><span class="toc-text">2.1 Why do Non SPJ Optimization ?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-GROPUP-BY-Optimization"><span class="toc-text">2.2 GROPUP BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-ORDER-BY-Optimization"><span class="toc-text">2.3 ORDER BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-DISTINCT-Optimization"><span class="toc-text">2.4 DISTINCT Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Non-SPJ-optimization-of-MySQL"><span class="toc-text">3. Non SPJ optimization of MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-GROPUP-BY-Optimization"><span class="toc-text">3.1 GROPUP BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-ORDER-BY-Optimization"><span class="toc-text">3.2 ORDER BY Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-DISTINCT-Optimization"><span class="toc-text">3.3 DISTINCT Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-LIMIT-Optimization"><span class="toc-text">3.4 LIMIT Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-SET-Optimization"><span class="toc-text">3.5 SET Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-6-Other-Optimization"><span class="toc-text">3.6 Other Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Logical-query-optimization-and-Heuristics-Rule"><span class="toc-text">4. Logical query optimization and Heuristics Rule</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/MySQL/" title="MySQL">MySQL<sup>42</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/zabbix/" title="zabbix">zabbix<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/其他/" title="其他">其他<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+  <div class="archiveslist">
+    <p class="asidetitle"><a href="/archives">归档</a></p>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">十一月 2016</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">21</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">4</span></li></ul>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="https://www.google.com" target="_blank" title="Google">Google</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wuchong.me" target="_blank" title="Jark&#39;s Blog">Jark&#39;s Blog</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+  
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS 订阅</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer">
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hello ,I&#39;m 冬日暖阳. <br>
+			Welcome to my blog.</p>
+	</section>
+	 
+	<div class="social-font">
+		
+		
+		
+		
+		<a href="https://twitter.com/sdy0917" target="_blank" class="icon-twitter" title="twitter"></a>
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:sdy0917@gmail.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+				<div class="cc-license">
+          <a href="http://creativecommons.org/licenses/by-nc/4.0" class="cc-opacity" target="_blank">
+            <img src="/img/cc-by-nc.svg" alt="Creative Commons">
+          </a>
+        </div>
+    
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2019 
+		
+		<a href="/about" target="_blank" title="冬日暖阳">冬日暖阳</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"mydba"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
